@@ -35,7 +35,25 @@
       display: flex; justify-content: space-between; align-items: center;
       padding: 1.5rem 2.5rem; mix-blend-mode: difference;
     }
-    .nav-logo { font-family: 'Space Mono', monospace; font-weight: bold; font-size: 1.25rem; letter-spacing: -0.05em; color: var(--paper); text-decoration: none; }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.2rem;
+      text-decoration: none; position: relative;
+    }
+    .logo-abd {
+      font-family: 'Inter', sans-serif; font-weight: 900; font-size: 1.25rem;
+      letter-spacing: -0.05em; color: var(--paper); transition: color 0.4s;
+    }
+    .logo-dev {
+      font-family: 'Space Mono', monospace; font-weight: 300; font-size: 0.6rem;
+      letter-spacing: 0.4em; color: var(--glass); margin-left: 0.2rem; margin-top: 0.1rem;
+    }
+    .logo-accent {
+      position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px;
+      background: linear-gradient(90deg, var(--ember), transparent);
+      transform: scaleX(0); transform-origin: left; transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);
+    }
+    .nav-logo:hover .logo-accent { transform: scaleX(1); }
+    .nav-logo:hover .logo-abd { color: var(--ember); }
     .nav-links { display: flex; gap: 2.5rem; list-style: none; }
     .nav-links a {
       font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase;
@@ -110,7 +128,11 @@
 
   <!-- Navbar -->
   <nav id="navbar">
-    <a href="index.html" class="nav-logo">ABDDEVELOPER</a>
+    <a href="index.html" class="nav-logo">
+      <span class="logo-abd">ABD</span>
+      <span class="logo-dev">DEVELOPER</span>
+      <div class="logo-accent"></div>
+    </a>
     <ul class="nav-links">
       <li><a href="index.html">[ Home ]</a></li>
       <li><a href="lab.html" style="color:var(--glass);">[ The Lab ]</a></li>
