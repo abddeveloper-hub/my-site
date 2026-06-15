@@ -175,6 +175,30 @@
       </div>
     </section>
 
+    <!-- Phase 5: Quantum State Mirror -->
+    <section class="section" id="sec-5">
+      <div class="narrative-block" id="narr-5" style="margin-top: 50vh;">
+        <h1 class="narrative-title">Quantum Reflection.</h1>
+        <p class="narrative-desc">The observer alters the observed. Reality is fluid.</p>
+      </div>
+    </section>
+
+    <!-- Phase 6: Neural Network Core -->
+    <section class="section" id="sec-6">
+      <div class="data-ui" id="neural-ui" style="position: sticky; top: 50vh; width: 100%; text-align: center; opacity: 0;">
+        <div class="data-stat" style="font-size: 2rem;">EPOCH: <span id="epoch-counter">9,420,111</span></div>
+        <div class="data-label">Neural Alignment in Progress</div>
+      </div>
+    </section>
+
+    <!-- Phase 7: Event Horizon -->
+    <section class="section" id="sec-7">
+      <div class="narrative-block" id="narr-7" style="margin-top: 50vh;">
+        <h1 class="narrative-title" style="color: #ff0000; letter-spacing: 0.5em;">SINGULARITY</h1>
+        <p class="narrative-desc">No escape velocity.</p>
+      </div>
+    </section>
+
   </div>
 
   <script>
@@ -228,8 +252,6 @@
     // ══════════════════════════════════════════
     //  PHASE 2: ARCHITECTURE EXPLORER
     // ══════════════════════════════════════════
-    // We will 'explode' the monolith into fragments when entering Phase 2.
-    // Instead of actually destroying it, we build a fragmented version inside a group.
     const fragGroup = new THREE.Group();
     fragGroup.visible = false;
     const fragments = [];
@@ -241,7 +263,6 @@
       });
       const mesh = new THREE.Mesh(baseGeo, mat);
       
-      // Store original and exploded positions
       const phi = Math.acos(-1 + (2 * i) / 80);
       const theta = Math.sqrt(80 * Math.PI) * phi;
       const rOrig = 4;
@@ -311,7 +332,80 @@
     landGroup.add(plane);
     scene.add(landGroup);
 
-    // Audio Context Setup
+    // ══════════════════════════════════════════
+    //  PHASE 5: QUANTUM MIRROR
+    // ══════════════════════════════════════════
+    const quantumGroup = new THREE.Group();
+    quantumGroup.visible = false;
+    
+    const torusGeo = new THREE.TorusKnotGeometry(3, 1, 100, 16);
+    const torusMat = new THREE.MeshStandardMaterial({ 
+      color: 0x6fe3d9, metalness: 1, roughness: 0.1 
+    });
+    const torus = new THREE.Mesh(torusGeo, torusMat);
+    quantumGroup.add(torus);
+    scene.add(quantumGroup);
+
+    // ══════════════════════════════════════════
+    //  PHASE 6: NEURAL NETWORK CORE
+    // ══════════════════════════════════════════
+    const neuralGroup = new THREE.Group();
+    neuralGroup.visible = false;
+
+    const nGeo = new THREE.BufferGeometry();
+    const nCnt = 3000;
+    const nPosArr = new Float32Array(nCnt * 3);
+    const nTargetArr = new Float32Array(nCnt * 3);
+    
+    for(let i=0; i<nCnt; i++) {
+      // Chaotic start
+      nPosArr[i*3] = (Math.random() - 0.5) * 30;
+      nPosArr[i*3+1] = (Math.random() - 0.5) * 30;
+      nPosArr[i*3+2] = (Math.random() - 0.5) * 30;
+
+      // Brain/Sphere target
+      const phi = Math.acos(-1 + (2 * i) / nCnt);
+      const theta = Math.sqrt(nCnt * Math.PI) * phi;
+      const r = 4 + Math.random(); // fuzzy sphere
+      nTargetArr[i*3] = r * Math.cos(theta) * Math.sin(phi);
+      nTargetArr[i*3+1] = r * Math.sin(theta) * Math.sin(phi);
+      nTargetArr[i*3+2] = r * Math.cos(phi);
+    }
+    
+    nGeo.setAttribute('position', new THREE.BufferAttribute(nPosArr, 3));
+    // store target in a custom attribute for the render loop to interpolate
+    nGeo.setAttribute('targetPos', new THREE.BufferAttribute(nTargetArr, 3));
+    
+    const nMat = new THREE.PointsMaterial({ size: 0.08, color: 0xff6b3d, transparent: true, opacity: 0.8 });
+    const neuralMesh = new THREE.Points(nGeo, nMat);
+    neuralGroup.add(neuralMesh);
+    scene.add(neuralGroup);
+
+    // ══════════════════════════════════════════
+    //  PHASE 7: EVENT HORIZON
+    // ══════════════════════════════════════════
+    const horizonGroup = new THREE.Group();
+    horizonGroup.visible = false;
+    
+    // Black hole sphere
+    const bhGeo = new THREE.SphereGeometry(3, 32, 32);
+    const bhMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const blackHole = new THREE.Mesh(bhGeo, bhMat);
+    horizonGroup.add(blackHole);
+
+    // Accretion Disk
+    const diskGeo = new THREE.TorusGeometry(5, 1.5, 2, 100);
+    const diskMat = new THREE.MeshBasicMaterial({ color: 0xff6b3d, transparent: true, opacity: 0.4, wireframe: true });
+    const disk = new THREE.Mesh(diskGeo, diskMat);
+    disk.rotation.x = Math.PI / 2.5;
+    horizonGroup.add(disk);
+    
+    scene.add(horizonGroup);
+
+
+    // ══════════════════════════════════════════
+    //  AUDIO CONTEXT
+    // ══════════════════════════════════════════
     let audioCtx, analyser, dataArray;
     let isPlaying = false;
 
@@ -323,20 +417,19 @@
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioCtx = new AudioContext();
       analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64; // Small size for terrain chunks
+      analyser.fftSize = 64; 
       
-      // Create a massive cinematic synth drone
       const osc1 = audioCtx.createOscillator();
       osc1.type = 'sawtooth';
-      osc1.frequency.value = 55; // Deep bass A1
+      osc1.frequency.value = 55;
 
       const osc2 = audioCtx.createOscillator();
       osc2.type = 'square';
-      osc2.frequency.value = 55.5; // Slight detune for thickness
+      osc2.frequency.value = 55.5;
 
       const lfo = audioCtx.createOscillator();
       lfo.type = 'sine';
-      lfo.frequency.value = 0.2; // Slow sweep
+      lfo.frequency.value = 0.2; 
 
       const filter = audioCtx.createBiquadFilter();
       filter.type = 'lowpass';
@@ -345,20 +438,16 @@
       lfoGain.gain.value = 500;
       lfo.connect(lfoGain);
       lfoGain.connect(filter.frequency);
-      
       filter.frequency.value = 400;
 
       const masterGain = audioCtx.createGain();
       masterGain.gain.value = 0.3;
 
-      osc1.connect(filter);
-      osc2.connect(filter);
-      filter.connect(analyser);
-      analyser.connect(masterGain);
+      osc1.connect(filter); osc2.connect(filter);
+      filter.connect(analyser); analyser.connect(masterGain);
       masterGain.connect(audioCtx.destination);
 
       osc1.start(); osc2.start(); lfo.start();
-      
       dataArray = new Uint8Array(analyser.frequencyBinCount);
     });
 
@@ -366,7 +455,6 @@
     //  SCROLL ANIMATIONS & LOGIC
     // ══════════════════════════════════════════
     
-    // Narratives fade in/out
     gsap.utils.toArray('.narrative-block').forEach((block) => {
       ScrollTrigger.create({
         trigger: block,
@@ -379,7 +467,6 @@
       });
     });
 
-    // Main Timeline
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: ".scroll-container",
@@ -389,38 +476,67 @@
       }
     });
 
-    // 0 -> 25%: Monolith spins and scales down
+    // We have 7 phases now, so each phase takes ~ 1/7 of the total scroll.
+    // 0 -> 14%: Monolith
     tl.to(monolithGroup.rotation, { y: Math.PI * 2, x: Math.PI, ease: "power1.inOut" }, 0)
-      .to(monolithGroup.scale, { x: 0.1, y: 0.1, z: 0.1, ease: "power2.in" }, 0.2)
-      .to(monolithGroup, { visible: false }, 0.3);
+      .to(monolithGroup.scale, { x: 0.1, y: 0.1, z: 0.1, ease: "power2.in" }, 0.1)
+      .to(monolithGroup, { visible: false }, 0.14);
 
-    // 25% -> 50%: Architecture UI and Fragments appear
-    tl.set(fragGroup, { visible: true }, 0.3)
-      .fromTo(fragGroup.scale, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1, ease: "elastic.out(1, 0.5)" }, 0.3)
-      .to('#arch-ui', { opacity: 1, duration: 0.1 }, 0.35)
-      .to(fragGroup.rotation, { y: Math.PI * 2, ease: "none" }, 0.3)
-      .to('#arch-ui', { opacity: 0, duration: 0.1 }, 0.45)
-      .to(fragGroup.scale, { x: 0, y: 0, z: 0, ease: "power2.in" }, 0.5)
-      .set(fragGroup, { visible: false }, 0.6);
+    // 14% -> 28%: Architecture UI
+    tl.set(fragGroup, { visible: true }, 0.14)
+      .fromTo(fragGroup.scale, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1, ease: "elastic.out(1, 0.5)" }, 0.14)
+      .to('#arch-ui', { opacity: 1, duration: 0.05 }, 0.18)
+      .to(fragGroup.rotation, { y: Math.PI * 2, ease: "none" }, 0.14)
+      .to('#arch-ui', { opacity: 0, duration: 0.05 }, 0.24)
+      .to(fragGroup.scale, { x: 0, y: 0, z: 0, ease: "power2.in" }, 0.26)
+      .set(fragGroup, { visible: false }, 0.28);
 
-    // 50% -> 75%: Global Data Globe
-    tl.set(globeGroup, { visible: true }, 0.6)
-      .fromTo(globeGroup.scale, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1, ease: "power3.out" }, 0.6)
-      .to('#data-ui', { opacity: 1, duration: 0.1 }, 0.65)
-      .to(globeGroup.rotation, { y: Math.PI * 1.5, ease: "none" }, 0.6)
-      .to('#data-ui', { opacity: 0, duration: 0.1 }, 0.75)
-      .to(globeGroup.scale, { x: 0, y: 0, z: 0, ease: "power2.in" }, 0.8)
-      .set(globeGroup, { visible: false }, 0.9);
+    // 28% -> 42%: Global Data Globe
+    tl.set(globeGroup, { visible: true }, 0.28)
+      .fromTo(globeGroup.scale, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1, ease: "power3.out" }, 0.28)
+      .to('#data-ui', { opacity: 1, duration: 0.05 }, 0.32)
+      .to(globeGroup.rotation, { y: Math.PI * 1.5, ease: "none" }, 0.28)
+      .to('#data-ui', { opacity: 0, duration: 0.05 }, 0.38)
+      .to(globeGroup.scale, { x: 0, y: 0, z: 0, ease: "power2.in" }, 0.40)
+      .set(globeGroup, { visible: false }, 0.42);
 
-    // 75% -> 100%: Audio Visualizer Plane
-    tl.set(landGroup, { visible: true }, 0.9)
-      .fromTo(landGroup.scale, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1, ease: "power2.out" }, 0.9)
-      .to('#audio-ui', { opacity: 1, duration: 0.05 }, 0.95);
+    // 42% -> 56%: Audio Visualizer Plane
+    tl.set(landGroup, { visible: true }, 0.42)
+      .fromTo(landGroup.scale, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1, ease: "power2.out" }, 0.42)
+      .to('#audio-ui', { opacity: 1, duration: 0.05 }, 0.45)
+      .to(landGroup.rotation, { z: Math.PI / 4, ease: "none" }, 0.42)
+      .to('#audio-ui', { opacity: 0, duration: 0.05 }, 0.52)
+      .to(landGroup.scale, { x: 0, y: 0, z: 0, ease: "power2.in" }, 0.54)
+      .set(landGroup, { visible: false }, 0.56);
 
-    // ══════════════════════════════════════════
-    //  INTERACTIONS
-    // ══════════════════════════════════════════
-    
+    // 56% -> 70%: Quantum Mirror
+    tl.set(quantumGroup, { visible: true }, 0.56)
+      .fromTo(quantumGroup.scale, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1, ease: "back.out(1.7)" }, 0.56)
+      .to(quantumGroup.rotation, { y: Math.PI * 3, x: Math.PI, ease: "none" }, 0.56)
+      .to(quantumGroup.scale, { x: 0, y: 0, z: 0, ease: "power2.in" }, 0.68)
+      .set(quantumGroup, { visible: false }, 0.70);
+
+    // 70% -> 84%: Neural Network Core
+    tl.set(neuralGroup, { visible: true }, 0.70)
+      .fromTo(neuralGroup.scale, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1, ease: "power3.out" }, 0.70)
+      .to('#neural-ui', { opacity: 1, duration: 0.05 }, 0.74)
+      // Neural alignment factor controlled in render loop via scroll obj
+      .to(window, { neuralAlignProgress: 1, duration: 0.1 }, 0.70) 
+      .to(neuralGroup.rotation, { y: Math.PI * 2, ease: "none" }, 0.70)
+      .to('#neural-ui', { opacity: 0, duration: 0.05 }, 0.80)
+      .to(neuralGroup.scale, { x: 0, y: 0, z: 0, ease: "power2.in" }, 0.82)
+      .set(neuralGroup, { visible: false }, 0.84);
+
+    // 84% -> 100%: Event Horizon
+    tl.set(horizonGroup, { visible: true }, 0.84)
+      .fromTo(horizonGroup.scale, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1, ease: "power2.out" }, 0.84)
+      .to(horizonGroup.rotation, { z: Math.PI * 4, ease: "none" }, 0.84)
+      // SUCK IN AT THE VERY END
+      .to(camera.position, { z: 2, ease: "power4.in" }, 0.95);
+
+    // Neural align progress
+    window.neuralAlignProgress = 0;
+
     // Architecture Explode Button
     let isExploded = false;
     document.getElementById('explode-btn').addEventListener('click', () => {
@@ -432,14 +548,12 @@
           x: isExploded ? mesh.userData.expX : mesh.userData.origX,
           y: isExploded ? mesh.userData.expY : mesh.userData.origY,
           z: isExploded ? mesh.userData.expZ : mesh.userData.origZ,
-          duration: 1.5,
-          ease: "expo.inOut"
+          duration: 1.5, ease: "expo.inOut"
         });
         gsap.to(mesh.rotation, {
           x: isExploded ? mesh.userData.rotX : 0,
           y: isExploded ? mesh.userData.rotY : 0,
-          duration: 1.5,
-          ease: "expo.inOut"
+          duration: 1.5, ease: "expo.inOut"
         });
       });
     });
@@ -451,16 +565,15 @@
 
     function animate() {
       requestAnimationFrame(animate);
-      
       const time = clock.getElapsedTime();
 
       // Continuous slow rotations
-      monolith.rotation.y += 0.005;
-      monolith.rotation.x += 0.002;
+      monolith.rotation.y += 0.005; monolith.rotation.x += 0.002;
       cage.rotation.y -= 0.003;
-      
       fragGroup.rotation.y += 0.002;
       globeGroup.rotation.y += 0.001;
+      torus.rotation.x += 0.01; torus.rotation.y += 0.005; // Quantum Mirror
+      disk.rotation.z += 0.02; // Horizon Disk
 
       // Audio reactive terrain
       if (isPlaying && analyser && dataArray) {
@@ -469,19 +582,15 @@
         const vertex = new THREE.Vector3();
         for ( let i = 0; i < positionAttribute.count; i ++ ) {
           vertex.fromBufferAttribute( positionAttribute, i );
-          // Use FFT data to displace Z (which is Y since plane is rotated)
-          // Map vertex X to a frequency bin
           const bin = Math.floor(Math.abs(vertex.x) % dataArray.length);
           const amt = dataArray[bin] / 255;
           vertex.z = amt * 4; 
           positionAttribute.setXYZ(i, vertex.x, vertex.y, vertex.z);
         }
         positionAttribute.needsUpdate = true;
-        // Make emissive glow pulse with bass
         const bass = dataArray[1] / 255;
         planeMat.emissiveIntensity = 0.2 + (bass * 0.8);
       } else {
-        // Just gentle wave if not playing
         const positionAttribute = planeGeo.attributes.position;
         const vertex = new THREE.Vector3();
         for ( let i = 0; i < positionAttribute.count; i ++ ) {
@@ -492,16 +601,39 @@
         positionAttribute.needsUpdate = true;
       }
 
+      // Neural Network Alignment animation
+      if (neuralGroup.visible) {
+        const pAtt = nGeo.attributes.position;
+        const tAtt = nGeo.attributes.targetPos;
+        for (let i=0; i<nCnt; i++) {
+          const px = pAtt.getX(i); const py = pAtt.getY(i); const pz = pAtt.getZ(i);
+          const tx = tAtt.getX(i); const ty = tAtt.getY(i); const tz = tAtt.getZ(i);
+          
+          // Interpolate based on window.neuralAlignProgress
+          const targetX = px + (tx - px) * window.neuralAlignProgress * 0.05;
+          const targetY = py + (ty - py) * window.neuralAlignProgress * 0.05;
+          const targetZ = pz + (tz - pz) * window.neuralAlignProgress * 0.05;
+          
+          pAtt.setXYZ(i, targetX, targetY, targetZ);
+        }
+        pAtt.needsUpdate = true;
+
+        // Fake epoch counter
+        document.getElementById('epoch-counter').innerText = Math.floor(9420111 + (window.neuralAlignProgress * 100000)).toLocaleString();
+      }
+
       // Parallax mouse effect globally
       camera.position.x += (mouseX * 5 - camera.position.x) * 0.05;
       camera.position.y += (-mouseY * 5 - camera.position.y) * 0.05;
-      camera.lookAt(scene.position);
+      // Except when we get sucked into the black hole
+      if(camera.position.z > 5) {
+        camera.lookAt(scene.position);
+      }
 
       renderer.render(scene, camera);
     }
 
-    let mouseX = 0;
-    let mouseY = 0;
+    let mouseX = 0; let mouseY = 0;
     window.addEventListener('mousemove', (e) => {
       mouseX = (e.clientX / window.innerWidth) * 2 - 1;
       mouseY = (e.clientY / window.innerHeight) * 2 - 1;
