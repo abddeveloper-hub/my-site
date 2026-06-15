@@ -47,9 +47,6 @@
       --steel: #8A93A6;
       --line: #262B36;
     }
-    
-    .nav-logo:hover svg { transform: scale(1.1) rotate(2deg); }
-    .nav-logo:hover .svg-ember { stroke: var(--glass) !important; filter: drop-shadow(0 0 8px var(--glass)); }
 
     /* ══ CINEMATIC SCROLLBAR ══ */
     ::-webkit-scrollbar { width: 14px; background: #0b0d12; border-left: 1px solid #1a1a1a; }
@@ -1106,14 +1103,9 @@
   <div class="grain"></div>
 
   <!-- ══════════ NAVBAR ══════════ -->
-  <header id="navbar-header">
+  <header id="navbar">
     <nav class="nav-inner">
-      <a href="index.html" class="nav-logo" aria-label="Home">
-        <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="overflow:visible; transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);">
-          <path d="M15,85 L50,15 L85,85" fill="none" stroke="var(--paper)" stroke-width="6" stroke-linejoin="miter" style="transition: stroke 0.3s;" />
-          <path d="M30,85 L45,35 L55,65 L65,35 L80,85" fill="none" stroke="var(--ember)" stroke-width="5" stroke-linejoin="miter" class="svg-ember" style="transition: stroke 0.3s, filter 0.3s;" />
-        </svg>
-      </a>
+      <a href="index.html" class="nav-logo">ABDDEVELOPER</a>
       <ul class="nav-links">
         <li><a href="index.html" style="color:var(--ember);">[ Home ]</a></li>
         <li><a href="about.html">[ About ]</a></li>
@@ -1455,14 +1447,6 @@
 
   // Attach observer to existing .reveal elements
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-  // Dynamically add slide transition to EVERY text element
-  document.querySelectorAll('p, h2, h3, h4, li').forEach(el => {
-    if(!el.classList.contains('reveal') && !el.closest('.hero') && !el.closest('.process-grid') && !el.closest('.stats-grid')) {
-      el.classList.add('reveal');
-      observer.observe(el);
-    }
-  });
 
   // ══════════════════════════════════════════
   //  MARQUEE BUILD

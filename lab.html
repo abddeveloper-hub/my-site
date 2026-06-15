@@ -42,8 +42,6 @@
       letter-spacing: 0.2em; color: var(--paper); text-decoration: none; transition: color 0.3s;
     }
     .nav-links a:hover { color: var(--ember); }
-    .nav-logo:hover svg { transform: scale(1.1) rotate(2deg); }
-    .nav-logo:hover .svg-ember { stroke: var(--glass) !important; filter: drop-shadow(0 0 8px var(--glass)); }
 
     /* ══ GLOBAL CANVAS ══ */
     #webgl-canvas {
@@ -112,12 +110,7 @@
 
   <!-- Navbar -->
   <nav id="navbar">
-    <a href="index.html" class="nav-logo" aria-label="Home">
-      <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="overflow:visible; transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);">
-        <path d="M15,85 L50,15 L85,85" fill="none" stroke="var(--paper)" stroke-width="6" stroke-linejoin="miter" style="transition: stroke 0.3s;" />
-        <path d="M30,85 L45,35 L55,65 L65,35 L80,85" fill="none" stroke="var(--ember)" stroke-width="5" stroke-linejoin="miter" class="svg-ember" style="transition: stroke 0.3s, filter 0.3s;" />
-      </svg>
-    </a>
+    <a href="index.html" class="nav-logo">ABDDEVELOPER</a>
     <ul class="nav-links">
       <li><a href="index.html">[ Home ]</a></li>
       <li><a href="lab.html" style="color:var(--glass);">[ The Lab ]</a></li>
