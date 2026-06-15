@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The Lab | Cinematic Sandbox</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    /* ══ THEME TOKENS ══ */
+    :root {
+      --obsidian: #0b0d12;
+      --ember: #ff6b3d;
+      --glass: #6fe3d9;
+      --steel: #8a93a6;
+      --paper: #f3f1ec;
+      --panel: #11141b;
+      --line: #262B36;
+    }
+    
+    ::-webkit-scrollbar { width: 14px; background: #0b0d12; border-left: 1px solid #1a1a1a; }
+    ::-webkit-scrollbar-thumb { 
+      background: #11141b; border: 1px solid #333; border-radius: 2px;
+      background-image: linear-gradient(0deg, transparent 20%, rgba(255,107,61,0.3) 20%, rgba(255,107,61,0.3) 80%, transparent 80%);
+      background-size: 100% 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--obsidian); color: var(--paper);
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      transition: filter 1.5s ease-in-out;
+    }
+    body.directors-cut { filter: hue-rotate(170deg) saturate(1.2) contrast(1.1) brightness(0.9); }
+
+    /* ── Navbar ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.5rem 2.5rem; mix-blend-mode: difference;
+    }
+    .nav-logo { font-family: 'Space Mono', monospace; font-weight: bold; font-size: 1.25rem; letter-spacing: -0.05em; color: var(--paper); text-decoration: none; }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a, .nav-links button {
+      font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 0.2em; color: var(--paper); text-decoration: none; transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--ember); }
+
+    /* ══ SNAP SCROLL CONTAINER ══ */
+    .lab-container {
+      height: 100vh;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+    }
+    .lab-section {
+      height: 100vh; width: 100vw;
+      scroll-snap-align: start;
+      position: relative;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border-bottom: 1px solid var(--line);
+      overflow: hidden;
+    }
+    .section-label {
+      position: absolute; top: 2rem; left: 2.5rem;
+      font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--ember);
+      letter-spacing: 0.3em; text-transform: uppercase; z-index: 100;
+    }
+
+    /* ══ 1. THE TERMINAL ══ */
+    #terminal-section { background: #050608; }
+    #terminal-output {
+      width: 80%; height: 60vh; font-family: 'Space Mono', monospace; font-size: 1rem;
+      color: var(--glass); overflow-y: auto; white-space: pre-wrap; margin-bottom: 1rem;
+    }
+    .terminal-input-row {
+      display: flex; width: 80%; font-family: 'Space Mono', monospace; color: var(--glass);
+    }
+    #terminal-input {
+      background: transparent; border: none; color: var(--paper); font-family: 'Space Mono', monospace;
+      font-size: 1rem; outline: none; width: 100%; margin-left: 10px;
+    }
+    .blinking-cursor { animation: blink 1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ══ 2. PHYSICS SANDBOX ══ */
+    #sandbox-section { background: var(--obsidian); cursor: crosshair; }
+    #sandbox-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    /* ══ 3. WEB SYNTHESIZER ══ */
+    #synth-section { background: radial-gradient(circle at center, #1a1e28 0%, #0b0d12 100%); }
+    .synth-grid {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 50px 50px; opacity: 0.2; pointer-events: none;
+    }
+    #synth-freq-display {
+      font-family: 'Space Mono', monospace; font-size: 4rem; color: var(--glass);
+      opacity: 0.5; pointer-events: none; text-align: center;
+    }
+
+    /* ══ 4. 3D VAULT ══ */
+    #vault-section { background: #000; }
+    #vault-canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; }
+    #vault-message {
+      position: absolute; font-family: 'Space Mono', monospace; color: var(--ember);
+      font-size: 2rem; opacity: 0; transition: opacity 1s; pointer-events: none;
+    }
+
+    /* ══ 5. TIME SCRUBBER ══ */
+    #scrubber-section { background: #000; overflow: hidden; }
+    #scrub-video {
+      position: absolute; inset: 0; width: 100vw; height: 100vh; object-fit: cover; opacity: 0.6;
+    }
+    .scrub-overlay {
+      position: absolute; inset: 0; z-index: 10; cursor: ew-resize;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ══ 6. CODE BREAKER ══ */
+    #codebreaker-section { background: #0b0d12; }
+    .code-grid {
+      display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px;
+      font-family: 'Space Mono', monospace; font-size: 2rem; color: var(--steel);
+    }
+    .code-char { cursor: pointer; transition: color 0.1s, text-shadow 0.1s; }
+    .code-char:hover { color: var(--paper); }
+    .code-char.cracked { color: var(--glass); text-shadow: 0 0 10px var(--glass); }
+
+    /* ══ 7. BURN REVEAL ══ */
+    #burn-section { background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2000&auto=format&fit=crop') center/cover; }
+    #burn-canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
+
+    /* ══ CUSTOM CURSOR ══ */
+    #cursor-dot, #cursor-ring {
+      position: fixed; border-radius: 50%; pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%); will-change: left,top;
+    }
+    #cursor-dot { width: 6px; height: 6px; background: var(--ember); transition: width 0.2s, height 0.2s, background 0.2s; }
+    #cursor-ring {
+      width: 36px; height: 36px; border: 1.5px solid rgba(255,107,61,0.5);
+      transition: width 0.35s ease-out, height 0.35s ease-out, border-color 0.35s;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav id="navbar">
+    <a href="index.html" class="nav-logo">AW.</a>
+    <ul class="nav-links">
+      <li><a href="index.html">[ Home ]</a></li>
+      <li><a href="lab.html" style="color:var(--ember);">[ The Lab ]</a></li>
+      <li><button id="theme-toggle" style="background:none;border:none;color:var(--glass);font-family:'Space Mono',monospace;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.2em;cursor:pointer;">[ Director's Cut ]</button></li>
+    </ul>
+  </nav>
+
+  <!-- Custom Cursor -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- Main Snap Container -->
+  <div class="lab-container">
+
+    <!-- 1. TERMINAL -->
+    <section class="lab-section" id="terminal-section">
+      <div class="section-label">01 // The Terminal</div>
+      <div id="terminal-output">Welcome to the Lab OS v9.0.4<br>Type 'help' to see available commands.<br><br></div>
+      <div class="terminal-input-row">
+        <span>guest@aw-lab:~$</span>
+        <input type="text" id="terminal-input" autocomplete="off" spellcheck="false" autofocus>
+      </div>
+    </section>
+
+    <!-- 2. PHYSICS SANDBOX -->
+    <section class="lab-section" id="sandbox-section">
+      <div class="section-label">02 // Fluid Physics Sandbox</div>
+      <canvas id="sandbox-canvas"></canvas>
+      <div style="position:absolute; bottom:3rem; font-family:'Space Mono'; color:var(--steel); pointer-events:none;">Click & Drag to Spawn Matter</div>
+    </section>
+
+    <!-- 3. WEB SYNTHESIZER -->
+    <section class="lab-section" id="synth-section">
+      <div class="section-label">03 // The Synthesizer</div>
+      <div class="synth-grid"></div>
+      <div id="synth-freq-display">440 Hz<br><span style="font-size:1rem;">Move mouse to modulate. Click to trigger chord.</span></div>
+    </section>
+
+    <!-- 4. 3D VAULT -->
+    <section class="lab-section" id="vault-section">
+      <div class="section-label">04 // The Vault (Three.js)</div>
+      <div id="vault-canvas"></div>
+      <div id="vault-message">ACCESS GRANTED</div>
+      <div style="position:absolute; bottom:3rem; font-family:'Space Mono'; color:var(--steel); pointer-events:none;">Drag horizontally to unlock the mechanism</div>
+    </section>
+
+    <!-- 5. TIME SCRUBBER -->
+    <section class="lab-section" id="scrubber-section">
+      <div class="section-label">05 // Time Scrubber</div>
+      <!-- Using an open-source sample video from W3C -->
+      <video id="scrub-video" src="https://www.w3schools.com/html/mov_bbb.mp4" muted playsinline></video>
+      <div class="scrub-overlay">
+        <h2 style="font-size:3rem; color:white; opacity:0.3; pointer-events:none; text-transform:uppercase; letter-spacing:0.2em;">Scrub Timeline</h2>
+      </div>
+    </section>
+
+    <!-- 6. CODE BREAKER -->
+    <section class="lab-section" id="codebreaker-section">
+      <div class="section-label">06 // Code Breaker</div>
+      <div style="text-align:center; margin-bottom: 2rem;">
+        <h2 style="color:var(--ember); font-family:'Space Mono';">Decrypt the Grid</h2>
+        <p style="color:var(--steel); font-family:'Space Mono';">Hover over the letters to find the word "CINEMA"</p>
+      </div>
+      <div class="code-grid" id="code-grid"></div>
+    </section>
+
+    <!-- 7. BURN REVEAL -->
+    <section class="lab-section" id="burn-section">
+      <div class="section-label">07 // Burn Reveal</div>
+      <canvas id="burn-canvas"></canvas>
+      <div style="position:absolute; top:50%; width:100%; text-align:center; font-family:'Space Mono'; color:var(--steel); pointer-events:none; z-index:100;">
+        <span style="background:var(--obsidian); padding:1rem;">Click & Drag to burn away the darkness</span>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // ══════════════════════════════════════════
+    //  GLOBAL: Cursor & Theme
+    // ══════════════════════════════════════════
+    const curDot = document.getElementById('cursor-dot');
+    const curRing = document.getElementById('cursor-ring');
+    let cx = -100, cy = -100, rx = -100, ry = -100;
+    document.addEventListener('mousemove', e => { cx = e.clientX; cy = e.clientY; });
+    (function cursorLoop() {
+      requestAnimationFrame(cursorLoop);
+      rx += (cx - rx) * 0.12; ry += (cy - ry) * 0.12;
+      curDot.style.left = cx + 'px'; curDot.style.top = cy + 'px';
+      curRing.style.left = rx + 'px'; curRing.style.top = ry + 'px';
+    })();
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      document.body.classList.toggle('directors-cut');
+    });
+
+    // ══════════════════════════════════════════
+    //  1. TERMINAL
+    // ══════════════════════════════════════════
+    const termIn = document.getElementById('terminal-input');
+    const termOut = document.getElementById('terminal-output');
+    termIn.addEventListener('keydown', e => {
+      if(e.key === 'Enter') {
+        const cmd = termIn.value.trim().toLowerCase();
+        termOut.innerHTML += `\n<span style="color:var(--ember)">guest@aw-lab:~$</span> ${cmd}\n`;
+        if(cmd === 'help') termOut.innerHTML += `Commands: whoami, projects, clear, matrix\n`;
+        else if(cmd === 'whoami') termOut.innerHTML += `ABDUL WAHID - Cinematic Frontend Engineer.\n`;
+        else if(cmd === 'projects') termOut.innerHTML += `ACCESS DENIED. Returning to index...\n`;
+        else if(cmd === 'clear') termOut.innerHTML = ``;
+        else if(cmd === 'matrix') termOut.innerHTML += `Wake up, Neo...\n`;
+        else if(cmd !== '') termOut.innerHTML += `Command not found: ${cmd}\n`;
+        termIn.value = '';
+        termOut.scrollTop = termOut.scrollHeight;
+      }
+    });
+
+    // ══════════════════════════════════════════
+    //  2. PHYSICS SANDBOX
+    // ══════════════════════════════════════════
+    const sbCanvas = document.getElementById('sandbox-canvas');
+    const sbCtx = sbCanvas.getContext('2d');
+    let sW, sH;
+    function resizeSb() { sW = sbCanvas.width = window.innerWidth; sH = sbCanvas.height = window.innerHeight; }
+    resizeSb(); window.addEventListener('resize', resizeSb);
+    
+    const sbParticles = [];
+    let isDrawing = false;
+    sbCanvas.addEventListener('mousedown', () => isDrawing = true);
+    sbCanvas.addEventListener('mouseup', () => isDrawing = false);
+    sbCanvas.addEventListener('mousemove', e => {
+      if(isDrawing) {
+        for(let i=0; i<5; i++) {
+          sbParticles.push({
+            x: e.clientX, y: e.clientY,
+            vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10,
+            life: 1, color: Math.random() > 0.5 ? '#ff6b3d' : '#6fe3d9'
+          });
+        }
+      }
+    });
+    (function sbLoop() {
+      requestAnimationFrame(sbLoop);
+      sbCtx.fillStyle = 'rgba(11, 13, 18, 0.2)'; // trail effect
+      sbCtx.fillRect(0,0,sW,sH);
+      for(let i=sbParticles.length-1; i>=0; i--) {
+        let p = sbParticles[i];
+        p.vy += 0.2; // gravity
+        p.x += p.vx; p.y += p.vy;
+        p.life -= 0.01;
+        if(p.y > sH) { p.y = sH; p.vy *= -0.8; } // bounce
+        if(p.life <= 0) { sbParticles.splice(i,1); continue; }
+        sbCtx.fillStyle = p.color;
+        sbCtx.beginPath(); sbCtx.arc(p.x, p.y, p.life*4, 0, Math.PI*2); sbCtx.fill();
+      }
+    })();
+
+    // ══════════════════════════════════════════
+    //  3. WEB SYNTHESIZER
+    // ══════════════════════════════════════════
+    const synthSec = document.getElementById('synth-section');
+    const freqDisp = document.getElementById('synth-freq-display');
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContext();
+    let osc = null, gain = null;
+    
+    synthSec.addEventListener('mousemove', e => {
+      const rect = synthSec.getBoundingClientRect();
+      if(e.clientY < rect.top || e.clientY > rect.bottom) return;
+      const freq = 100 + (e.clientX / window.innerWidth) * 1000;
+      freqDisp.innerHTML = `${Math.round(freq)} Hz<br><span style="font-size:1rem;">Move mouse to modulate. Click to trigger chord.</span>`;
+      if(osc) { osc.frequency.setTargetAtTime(freq, ctx.currentTime, 0.1); }
+    });
+    synthSec.addEventListener('mousedown', e => {
+      if(ctx.state === 'suspended') ctx.resume();
+      osc = ctx.createOscillator();
+      gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      const freq = 100 + (e.clientX / window.innerWidth) * 1000;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      
+      // Add a sub-oscillator for the chord effect
+      const subOsc = ctx.createOscillator();
+      subOsc.type = 'square';
+      subOsc.frequency.setValueAtTime(freq / 2, ctx.currentTime);
+      subOsc.connect(gain);
+      subOsc.start(); subOsc.stop(ctx.currentTime + 1);
+
+      osc.connect(gain); gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1);
+      osc.start(); osc.stop(ctx.currentTime + 1);
+    });
+
+    // ══════════════════════════════════════════
+    //  4. 3D VAULT (Three.js)
+    // ══════════════════════════════════════════
+    const vaultCanvas = document.getElementById('vault-canvas');
+    const vScene = new THREE.Scene();
+    const vCamera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
+    const vRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    vRenderer.setSize(window.innerWidth, window.innerHeight);
+    vaultCanvas.appendChild(vRenderer.domElement);
+    
+    const dialGeo = new THREE.TorusGeometry(3, 1, 16, 100);
+    const dialMat = new THREE.MeshStandardMaterial({ color: 0x262B36, metalness: 0.8, roughness: 0.2 });
+    const dial = new THREE.Mesh(dialGeo, dialMat);
+    vScene.add(dial);
+    
+    const vLight = new THREE.PointLight(0xff6b3d, 2, 50);
+    vLight.position.set(5, 5, 5);
+    vScene.add(vLight);
+    vScene.add(new THREE.AmbientLight(0x404040));
+    vCamera.position.z = 10;
+
+    let targetRot = 0;
+    let isDraggingDial = false;
+    let lastMouseX = 0;
+    vaultCanvas.addEventListener('mousedown', e => { isDraggingDial = true; lastMouseX = e.clientX; });
+    window.addEventListener('mouseup', () => isDraggingDial = false);
+    window.addEventListener('mousemove', e => {
+      if(isDraggingDial) {
+        const delta = e.clientX - lastMouseX;
+        targetRot += delta * 0.01;
+        lastMouseX = e.clientX;
+        if(targetRot > 5) {
+          document.getElementById('vault-message').style.opacity = 1;
+          vLight.color.setHex(0x6fe3d9); // Unlock turns cyan
+        }
+      }
+    });
+
+    (function vLoop() {
+      requestAnimationFrame(vLoop);
+      dial.rotation.y += (targetRot - dial.rotation.y) * 0.1;
+      vRenderer.render(vScene, vCamera);
+    })();
+
+    // ══════════════════════════════════════════
+    //  5. TIME SCRUBBER
+    // ══════════════════════════════════════════
+    const vid = document.getElementById('scrub-video');
+    const scrubOverlay = document.querySelector('.scrub-overlay');
+    scrubOverlay.addEventListener('mousemove', e => {
+      const rect = scrubOverlay.getBoundingClientRect();
+      if(vid.duration) {
+        const perc = e.clientX / window.innerWidth;
+        vid.currentTime = perc * vid.duration;
+      }
+    });
+
+    // ══════════════════════════════════════════
+    //  6. CODE BREAKER
+    // ══════════════════════════════════════════
+    const grid = document.getElementById('code-grid');
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+    const secret = "CINEMA";
+    let foundCount = 0;
+    for(let i=0; i<60; i++) {
+      const span = document.createElement('span');
+      span.className = 'code-char';
+      span.innerText = chars[Math.floor(Math.random() * chars.length)];
+      
+      // Inject secret letters randomly
+      if(i%10 === 0 && i/10 < secret.length) {
+        span.dataset.secret = secret[i/10];
+      }
+
+      span.addEventListener('mouseenter', () => {
+        if(span.dataset.secret && !span.classList.contains('cracked')) {
+          span.innerText = span.dataset.secret;
+          span.classList.add('cracked');
+          foundCount++;
+          if(foundCount === secret.length) {
+            alert('SYSTEM DECRYPTED: WELCOME TO THE CINEMA');
+          }
+        } else if(!span.classList.contains('cracked')) {
+          span.innerText = chars[Math.floor(Math.random() * chars.length)];
+        }
+      });
+      grid.appendChild(span);
+    }
+    setInterval(() => {
+      document.querySelectorAll('.code-char:not(.cracked)').forEach(el => {
+        if(Math.random() > 0.8) el.innerText = chars[Math.floor(Math.random() * chars.length)];
+      });
+    }, 100);
+
+    // ══════════════════════════════════════════
+    //  7. BURN REVEAL
+    // ══════════════════════════════════════════
+    const bCanvas = document.getElementById('burn-canvas');
+    const bCtx = bCanvas.getContext('2d');
+    let bW, bH;
+    function resizeB() { bW = bCanvas.width = window.innerWidth; bH = bCanvas.height = window.innerHeight; }
+    resizeB(); window.addEventListener('resize', resizeB);
+
+    // Fill with black
+    bCtx.fillStyle = '#0b0d12';
+    bCtx.fillRect(0, 0, bW, bH);
+    bCtx.globalCompositeOperation = 'destination-out';
+
+    let isBurning = false;
+    bCanvas.addEventListener('mousedown', () => isBurning = true);
+    bCanvas.addEventListener('mouseup', () => isBurning = false);
+    bCanvas.addEventListener('mousemove', e => {
+      if(isBurning) {
+        const rad = Math.random() * 50 + 50;
+        const grad = bCtx.createRadialGradient(e.clientX, e.clientY, 0, e.clientX, e.clientY, rad);
+        grad.addColorStop(0, 'rgba(0,0,0,1)');
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        bCtx.fillStyle = grad;
+        bCtx.beginPath(); bCtx.arc(e.clientX, e.clientY, rad, 0, Math.PI*2); bCtx.fill();
+      }
+    });
+
+  </script>
+</body>
+</html>
