@@ -48,6 +48,18 @@
       --line: #262B36;
     }
 
+    /* ══ CINEMATIC SCROLLBAR ══ */
+    ::-webkit-scrollbar { width: 14px; background: #0b0d12; border-left: 1px solid #1a1a1a; }
+    ::-webkit-scrollbar-thumb { 
+      background: #11141b; border: 1px solid #333; border-radius: 2px;
+      background-image: linear-gradient(0deg, transparent 20%, rgba(255,107,61,0.3) 20%, rgba(255,107,61,0.3) 80%, transparent 80%);
+      background-size: 100% 12px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background-color: #1a1e28; }
+    
+    /* ══ BASE SETUP ══ */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     @media (prefers-reduced-motion: no-preference) {
       html { scroll-behavior: smooth; }
     }
@@ -55,9 +67,6 @@
     ::selection { background-color: var(--ember); color: var(--obsidian); }
 
     * { scrollbar-width: thin; scrollbar-color: var(--line) var(--obsidian); }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: var(--obsidian); }
-    ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
     :focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
 
     body {
@@ -66,6 +75,10 @@
       font-family: 'Inter', sans-serif;
       min-height: 100vh;
       overflow-x: hidden;
+      transition: filter 1.5s ease-in-out;
+    }
+    body.directors-cut {
+      filter: hue-rotate(170deg) saturate(1.2) contrast(1.1) brightness(0.9);
     }
 
     /* ══ CINEMATIC COLOR GRADE ══ */
@@ -180,11 +193,24 @@
     }
 
     /* ── Film grain ── */
+    @keyframes grain-dance {
+      0%, 100% { transform: translate(0, 0); }
+      10% { transform: translate(-5%, -10%); }
+      20% { transform: translate(-15%, 5%); }
+      30% { transform: translate(7%, -25%); }
+      40% { transform: translate(-5%, 25%); }
+      50% { transform: translate(-15%, 10%); }
+      60% { transform: translate(15%, 0%); }
+      70% { transform: translate(0%, 15%); }
+      80% { transform: translate(3%, 35%); }
+      90% { transform: translate(-10%, 10%); }
+    }
     .grain {
-      position: fixed; inset: 0; z-index: 50; pointer-events: none;
+      position: fixed; inset: -100%; width: 300%; height: 300%; z-index: 50; pointer-events: none;
       opacity: 0.055; mix-blend-mode: overlay;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
       background-size: 160px 160px;
+      animation: grain-dance 4s steps(10) infinite;
     }
 
     /* ── Navbar ── */
@@ -254,6 +280,11 @@
     .vignette {
       position: absolute; inset: 0; pointer-events: none;
       background: radial-gradient(ellipse at center, transparent 35%, rgba(11,13,18,0.55) 80%, rgba(11,13,18,0.95) 100%);
+      animation: breathe 8s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 0.5; }
     }
     .hero-hud {
       position: relative; z-index: 10;
@@ -298,6 +329,7 @@
     .hero-name-word span {
       display: inline-block;
       transform: translateY(100%); opacity: 0;
+      transition: transform 0.2s cubic-bezier(0.22,1,0.36,1);
     }
     .hero-name-word:nth-child(1) span { animation: wordUp 0.7s cubic-bezier(0.22,1,0.36,1) 0.36s forwards; }
     /* Wahid = Wa + HI + d as three sibling spans inside same word-wrapper */
@@ -305,12 +337,15 @@
       display: inline-flex; align-items: baseline; overflow: visible;
     }
     .wahid-plain { display: inline-block; overflow: hidden; }
-    .wahid-plain span { display: inline-block; transform: translateY(100%); opacity: 0; }
+    .wahid-plain span { 
+      display: inline-block; transform: translateY(100%); opacity: 0; 
+      transition: transform 0.2s cubic-bezier(0.22,1,0.36,1);
+    }
     .wahid-plain--wa span { animation: wordUp 0.7s cubic-bezier(0.22,1,0.36,1) 0.42s forwards; }
     .wahid-plain--d  span { animation: wordUp 0.7s cubic-bezier(0.22,1,0.36,1) 0.58s forwards; }
     @keyframes wordUp { to { transform: translateY(0); opacity: 1; } }
 
-    /* ── HI NEW MOTION: Floating glow ── */
+    /* ── HI NEW MOTION: Floating glow & Extreme Hover Glitch ── */
     .hi-letter {
       display: inline-block;
       color: var(--ember) !important;
@@ -319,6 +354,27 @@
       visibility: visible !important;
       transform-origin: bottom center;
       animation: hiWaveAndPulse 3.5s ease-in-out infinite;
+      cursor: pointer;
+      transition: color 0.1s;
+    }
+    .hi-letter:hover {
+      animation: hiSuperGlitch 0.2s infinite;
+      color: var(--glass) !important;
+      text-shadow: 
+        0 0 10px var(--glass), 
+        0 0 20px var(--glass), 
+        0 0 40px var(--glass),
+        -4px 0 2px rgba(255,0,80,0.8),
+         4px 0 2px rgba(0,220,255,0.8);
+      z-index: 100;
+    }
+    @keyframes hiSuperGlitch {
+      0% { transform: translate(0, 0) skew(0deg); clip-path: none; }
+      20% { transform: translate(-4px, 2px) skew(10deg); clip-path: inset(20% 0 60% 0); }
+      40% { transform: translate(4px, -2px) skew(-10deg); clip-path: inset(60% 0 10% 0); }
+      60% { transform: translate(-2px, -4px) skew(5deg); clip-path: inset(10% 0 80% 0); }
+      80% { transform: translate(2px, 4px) skew(-5deg); clip-path: inset(40% 0 20% 0); }
+      100% { transform: translate(0, 0) skew(0deg); clip-path: none; }
     }
     /* Electric arc before */
     .hi-letter::before {
@@ -480,7 +536,15 @@
       border: 1px solid var(--line);
       transition: transform 0.7s ease;
     }
-    .project-card:hover .project-visual { transform: scale(1.02); }
+    /* ══ LENS DISTORTION FLASH ══ */
+    @keyframes lens-flash {
+      0% { filter: blur(0px) contrast(1) brightness(1); transform: scale(1); }
+      30% { filter: blur(4px) contrast(1.5) brightness(1.2) hue-rotate(10deg); transform: scale(1.05); }
+      100% { filter: blur(0px) contrast(1) brightness(1); transform: scale(1.02); }
+    }
+    .project-card:hover .project-visual { 
+      animation: lens-flash 0.6s cubic-bezier(0.22,1,0.36,1) forwards;
+    }
     .project-visual--even {
       background: linear-gradient(135deg, #1a0f0a 0%, #0b0d12 55%, #11141b 100%);
     }
@@ -660,6 +724,7 @@
     }
     .mag-btn:hover::before { transform: scaleX(1); }
     .mag-btn:hover { color: var(--obsidian); }
+    .mag-btn, .mag-btn-ghost { transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), background 0.3s, border-color 0.3s, color 0.3s; will-change: transform; display: inline-flex; }
     .mag-btn span { position: relative; z-index: 1; }
     .mag-btn-ghost {
       display: inline-flex; align-items: center; gap: 0.5rem;
@@ -672,7 +737,6 @@
     }
     .mag-btn-ghost:hover { border-color: var(--paper); color: var(--paper); }
 
-    /* ══ STATS SECTION ══ */
     .stats-grid {
       display: grid; grid-template-columns: repeat(2,1fr);
       border: 1px solid var(--line); gap: 1px; background: var(--line);
@@ -685,6 +749,23 @@
       opacity: 0; transform: translateY(20px);
       transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1);
     }
+    /* ══ CINEMATIC SPOTLIGHT HOVER ══ */
+    .spotlight-card {
+      position: relative; overflow: hidden;
+    }
+    .spotlight-card::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 10;
+      background: radial-gradient(400px circle at var(--sx, -1000px) var(--sy, -1000px), rgba(255,107,61,0.1), transparent 40%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .spotlight-card:hover::before { opacity: 1; }
+    .spotlight-card::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 11;
+      border: 1px solid transparent;
+      border-image: radial-gradient(300px circle at var(--sx, -1000px) var(--sy, -1000px), var(--ember), transparent 40%) 1;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .spotlight-card:hover::after { opacity: 1; }
     .stat-cell.visible { opacity: 1; transform: translateY(0); }
     .stat-cell:nth-child(2) { transition-delay: 0.1s; }
     .stat-cell:nth-child(3) { transition-delay: 0.2s; }
@@ -798,9 +879,18 @@
                   border-color 0.35s, opacity 0.35s;
       opacity: 0.7;
     }
+    #cursor-text {
+      position: fixed; pointer-events: none; z-index: 10000;
+      color: var(--obsidian); font-family: 'Space Mono', monospace;
+      font-size: 0.6rem; font-weight: bold; text-align: center;
+      width: 56px; height: 56px; line-height: 56px;
+      opacity: 0; transition: opacity 0.3s;
+      transform: translate(-50%, -50%);
+      will-change: left, top;
+    }
     body:hover #cursor-dot { opacity: 1; }
     a:hover ~ #cursor-ring, button:hover ~ #cursor-ring { width: 56px; height: 56px; border-color: var(--ember); opacity:1; }
-    @media (hover: none) { #cursor-dot, #cursor-ring { display: none; } }
+    @media (hover: none) { #cursor-dot, #cursor-ring, #cursor-text { display: none; } }
 
     /* ══ SCROLL PROGRESS BAR ══ */
     #scroll-prog {
@@ -845,6 +935,20 @@
     .letter-hover:hover span:nth-child(odd)  { transform: translateY(-4px) rotate(-2deg); }
     .letter-hover:hover span:nth-child(even) { transform: translateY( 4px) rotate( 2deg); }
 
+    /* ══ SCROLL VELOCITY SKEW ══ */
+    .skew-elem {
+      will-change: transform;
+      transition: transform 0.1s linear;
+    }
+    /* ══ EASTER EGG SHAKE ══ */
+    @keyframes easterShake {
+      0%, 100% { transform: translate(0,0) rotate(0deg); filter: invert(1) hue-rotate(180deg) saturate(3); }
+      10%, 30%, 50%, 70%, 90% { transform: translate(-10px, 10px) rotate(-1deg); }
+      20%, 40%, 60%, 80% { transform: translate(10px, -10px) rotate(1deg); }
+    }
+    .easter-egg-active {
+      animation: easterShake 0.4s ease-in-out 5;
+    }
     /* ══ IRIS WIPE OVERLAY ══ */
     #iris {
       position: fixed; inset: 0; z-index: 800; pointer-events: none;
@@ -966,6 +1070,10 @@
   <!-- Custom cursor -->
   <div id="cursor-dot"></div>
   <div id="cursor-ring"></div>
+  <div id="cursor-text">VIEW</div>
+
+  <!-- Dust layer -->
+  <canvas id="dust-canvas" style="position:fixed;inset:0;z-index:9998;pointer-events:none;"></canvas>
 
   <!-- Bokeh layer -->
   <canvas id="bokeh-canvas"></canvas>
@@ -1003,6 +1111,7 @@
         <li><a href="about.html">[ About ]</a></li>
         <li><a href="work.html">[ Work ]</a></li>
         <li><a href="contact.html">[ Contact ]</a></li>
+        <li><button id="theme-toggle" style="background:none;border:none;color:var(--glass);font-family:'Space Mono',monospace;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.2em;cursor:pointer;" class="ripple-host">[ Director's Cut ]</button></li>
       </ul>
       <a href="contact.html" class="nav-mobile">[ Menu ]</a>
     </nav>
@@ -1153,19 +1262,19 @@
   <section style="padding:0 0;">
     <div style="max-width:72rem;margin:0 auto;padding:4rem 2.5rem;">
       <div class="stats-grid">
-        <div class="stat-cell" data-count="6" data-suffix="+">
+        <div class="stat-cell spotlight-card" data-count="6" data-suffix="+">
           <span class="stat-value" id="stat0">0</span>
           <span class="stat-label">Years crafting</span>
         </div>
-        <div class="stat-cell" data-count="40" data-suffix="+">
+        <div class="stat-cell spotlight-card" data-count="40" data-suffix="+">
           <span class="stat-value" id="stat1">0</span>
           <span class="stat-label">Projects shipped</span>
         </div>
-        <div class="stat-cell" data-count="99" data-suffix="">
+        <div class="stat-cell spotlight-card" data-count="99" data-suffix="">
           <span class="stat-value" id="stat2">0</span>
           <span class="stat-label">Lighthouse score</span>
         </div>
-        <div class="stat-cell">
+        <div class="stat-cell spotlight-card">
           <span class="stat-value">∞</span>
           <span class="stat-label">Frames per second</span>
         </div>
@@ -1182,22 +1291,22 @@
         <span class="line-inner">Process</span>
       </h2>
       <div class="process-grid">
-        <div class="process-step">
+        <div class="process-step spotlight-card">
           <div class="process-num">01</div>
           <p class="process-title">Frame the Shot</p>
           <p class="process-desc">Every project starts with deep research — understanding the brand, audience, and story before a single line of code is written.</p>
         </div>
-        <div class="process-step">
+        <div class="process-step spotlight-card">
           <div class="process-num">02</div>
           <p class="process-title">Expose the Idea</p>
           <p class="process-desc">Wireframes and motion explorations reveal the pacing. I prototype interactions early so we feel the rhythm before full production.</p>
         </div>
-        <div class="process-step">
+        <div class="process-step spotlight-card">
           <div class="process-num">03</div>
           <p class="process-title">Develop the Film</p>
           <p class="process-desc">Engineering the final experience with obsessive attention to performance, accessibility, and micro-details that make it memorable.</p>
         </div>
-        <div class="process-step">
+        <div class="process-step spotlight-card">
           <div class="process-num">04</div>
           <p class="process-title">Screen &amp; Iterate</p>
           <p class="process-desc">Real user testing, performance audits, and refinement cycles until every scene plays exactly as intended — then we ship.</p>
@@ -1319,6 +1428,14 @@
   }
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
+
+  const themeToggle = document.getElementById('theme-toggle');
+  if(themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('directors-cut');
+      playSound('click');
+    });
+  }
 
   // ══════════════════════════════════════════
   //  INTERSECTION OBSERVER (reveal)
@@ -1650,10 +1767,44 @@
   document.body.style.overflow = 'hidden';
 
   // ══════════════════════════════════════════
-  //  CUSTOM CURSOR
+  //  UI SOUNDS
+  // ══════════════════════════════════════════
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  const audioCtx = AudioContext ? new AudioContext() : null;
+  function playSound(type) {
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    if (type === 'hover') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
+    } else if (type === 'click') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.1);
+    }
+  }
+
+  // ══════════════════════════════════════════
+  //  CUSTOM CURSOR & HOVER
   // ══════════════════════════════════════════
   const curDot  = document.getElementById('cursor-dot');
   const curRing = document.getElementById('cursor-ring');
+  const curText = document.getElementById('cursor-text');
+  const lensGlow = document.querySelector('.lens-glow');
   let cx = -100, cy = -100, rx = -100, ry = -100;
   document.addEventListener('mousemove', e => { cx = e.clientX; cy = e.clientY; });
   (function cursorLoop() {
@@ -1664,9 +1815,22 @@
     curDot.style.top   = cy + 'px';
     curRing.style.left = rx + 'px';
     curRing.style.top  = ry + 'px';
+    curText.style.left = rx + 'px';
+    curText.style.top  = ry + 'px';
+    if(lensGlow) {
+      const px = (cx / window.innerWidth) * 100;
+      const py = (cy / window.innerHeight) * 100;
+      lensGlow.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,107,61,0.2), transparent 40%), radial-gradient(circle at ${100-px}% ${100-py}%, rgba(111,227,217,0.15), transparent 45%)`;
+    }
   })();
-  document.querySelectorAll('a, button').forEach(el => {
+  document.querySelectorAll('a, button, .hi-letter').forEach(el => {
     el.addEventListener('mouseenter', () => {
+      // If it's the HI letter, play a more intense sound
+      if(el.classList.contains('hi-letter')) {
+        for(let i=0; i<3; i++) setTimeout(() => playSound('click'), i*50);
+      } else {
+        playSound('hover');
+      }
       curRing.style.width  = '56px';
       curRing.style.height = '56px';
       curRing.style.borderColor = 'var(--ember)';
@@ -1680,6 +1844,208 @@
       curRing.style.opacity = '0.7';
       curDot.style.background = 'var(--ember)';
     });
+    el.addEventListener('mousedown', () => {
+      playSound('click');
+      curRing.style.transform = 'translate(-50%, -50%) scale(0.8)';
+      curDot.style.transform = 'translate(-50%, -50%) scale(1.5)';
+    });
+    el.addEventListener('mouseup', () => {
+      curRing.style.transform = 'translate(-50%, -50%) scale(1)';
+      curDot.style.transform = 'translate(-50%, -50%) scale(1)';
+    });
+  });
+
+  // Cursor Text Injection
+  document.querySelectorAll('.project-card').forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      curText.style.opacity = '1';
+      curDot.style.opacity = '0';
+      curRing.style.width = '70px';
+      curRing.style.height = '70px';
+      curRing.style.background = 'var(--glass)';
+      curRing.style.borderColor = 'var(--glass)';
+    });
+    card.addEventListener('mouseleave', () => {
+      curText.style.opacity = '0';
+      curDot.style.opacity = '1';
+      curRing.style.background = 'transparent';
+    });
+  });
+
+  // Magnetic Buttons
+  document.querySelectorAll('.mag-btn, .mag-btn-ghost').forEach(btn => {
+    btn.addEventListener('mousemove', (e) => {
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      btn.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = `translate(0px, 0px)`;
+    });
+  });
+
+  // ══════════════════════════════════════════
+  //  REPELLING MAGNETIC TEXT
+  // ══════════════════════════════════════════
+  const heroLetters = document.querySelectorAll('.hero-name-word span, .wahid-plain span');
+  document.addEventListener('mousemove', e => {
+    heroLetters.forEach(letter => {
+      const rect = letter.getBoundingClientRect();
+      const lx = rect.left + rect.width / 2;
+      const ly = rect.top + rect.height / 2;
+      const dx = e.clientX - lx;
+      const dy = e.clientY - ly;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      
+      if (dist < 150) {
+        // Push away
+        const pushDist = (150 - dist) * 0.3;
+        const angle = Math.atan2(dy, dx);
+        const px = -Math.cos(angle) * pushDist;
+        const py = -Math.sin(angle) * pushDist;
+        letter.style.transform = `translate(${px}px, ${py}px) scale(1.1)`;
+        letter.style.color = 'var(--glass)';
+      } else {
+        letter.style.transform = `translate(0, 0) scale(1)`;
+        letter.style.color = '';
+      }
+    });
+  });
+
+  // ══════════════════════════════════════════
+  //  BOKEH DUST & MOUSE EXPLOSIONS
+  // ══════════════════════════════════════════
+  (function initDust() {
+    const canvas = document.getElementById('dust-canvas');
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+    
+    let isCharging = false;
+    let chargeTime = 0;
+    const particles = [];
+    const explosionParticles = [];
+
+    document.addEventListener('mousedown', () => { isCharging = true; });
+    document.addEventListener('mouseup', e => { 
+      isCharging = false;
+      // Explode!
+      const burstCount = Math.min(chargeTime * 2, 200);
+      for(let i=0; i<burstCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * (chargeTime * 0.1) + 2;
+        explosionParticles.push({
+          x: e.clientX, y: e.clientY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1, size: Math.random() * 4 + 2,
+          gravity: 0.1
+        });
+      }
+      if(burstCount > 20) playSound('click');
+      chargeTime = 0;
+    });
+
+    document.addEventListener('mousemove', e => {
+      if(Math.random() > 0.4 && !isCharging) {
+        particles.push({
+          x: e.clientX, y: e.clientY,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          life: 1, size: Math.random() * 3 + 1
+        });
+      }
+    });
+
+    let matrixDrops = [];
+    window.matrixActive = false;
+
+    (function loop() {
+      requestAnimationFrame(loop);
+      ctx.clearRect(0, 0, W, H);
+
+      if (window.matrixActive) {
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(0,0,W,H);
+        ctx.fillStyle = '#0F0';
+        ctx.font = '15px monospace';
+        for(let i=0; i<matrixDrops.length; i++) {
+          const text = String.fromCharCode(Math.random() * 128);
+          ctx.fillText(text, i*15, matrixDrops[i]*15);
+          if(matrixDrops[i]*15 > H && Math.random() > 0.975) matrixDrops[i] = 0;
+          matrixDrops[i]++;
+        }
+        return; // Skip normal particles when matrix is active
+      }
+
+      if (isCharging) {
+        chargeTime += 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, Math.min(chargeTime, 150), 0, Math.PI*2);
+        ctx.strokeStyle = `rgba(111,227,217,${Math.min(chargeTime/100, 0.8)})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      for(let i=particles.length-1; i>=0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+        if(p.life <= 0) { particles.splice(i, 1); continue; }
+        ctx.fillStyle = `rgba(255, 107, 61, ${p.life * 0.6})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+      }
+
+      for(let i=explosionParticles.length-1; i>=0; i--) {
+        const p = explosionParticles[i];
+        p.vy += p.gravity;
+        p.x += p.vx; p.y += p.vy; p.life -= 0.015;
+        if(p.y > H) { p.y = H; p.vy *= -0.6; } // Bounce off bottom
+        if(p.life <= 0) { explosionParticles.splice(i, 1); continue; }
+        ctx.fillStyle = `rgba(111, 227, 217, ${p.life})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+      }
+    })();
+    
+    // Setup matrix drops globally for the easter egg
+    window.startMatrix = function() {
+      window.matrixActive = true;
+      const columns = canvas.width / 15;
+      for(let x = 0; x < columns; x++) matrixDrops[x] = 1;
+      setTimeout(() => { window.matrixActive = false; }, 5000);
+    }
+  })();
+
+  // ══════════════════════════════════════════
+  //  THE "ACTION" & "MATRIX" EASTER EGGS
+  // ══════════════════════════════════════════
+  let konamiCodeAction = 'ACTION';
+  let konamiCodeMatrix = 'MATRIX';
+  let actionIdx = 0, matrixIdx = 0;
+  window.addEventListener('keydown', e => {
+    const key = e.key.toUpperCase();
+    
+    // Action Egg
+    if(key === konamiCodeAction[actionIdx]) {
+      actionIdx++;
+      if(actionIdx === konamiCodeAction.length) {
+        actionIdx = 0;
+        document.body.classList.add('easter-egg-active');
+        setTimeout(() => document.body.classList.remove('easter-egg-active'), 2000);
+      }
+    } else { actionIdx = 0; }
+    
+    // Matrix Egg
+    if(key === konamiCodeMatrix[matrixIdx]) {
+      matrixIdx++;
+      if(matrixIdx === konamiCodeMatrix.length) {
+        matrixIdx = 0;
+        if(window.startMatrix) window.startMatrix();
+      }
+    } else { matrixIdx = 0; }
   });
 
   // ══════════════════════════════════════════
@@ -1722,15 +2088,121 @@
   })();
 
   // ══════════════════════════════════════════
-  //  SCROLL PARALLAX
+  //  SPOTLIGHT CARDS HOVER
+  // ══════════════════════════════════════════
+  document.querySelectorAll('.spotlight-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      card.style.setProperty('--sx', `${x}px`);
+      card.style.setProperty('--sy', `${y}px`);
+    });
+  });
+
+  // ══════════════════════════════════════════
+  //  SCROLL PARALLAX, HUD & VELOCITY SKEW
   // ══════════════════════════════════════════
   const parallaxSlow = document.querySelectorAll('.parallax-slow');
   const parallaxFast = document.querySelectorAll('.parallax-fast');
+  const skewElems = document.querySelectorAll('.project-visual, .hero-name');
+  skewElems.forEach(el => el.classList.add('skew-elem'));
+  const scrollProg = document.getElementById('scroll-prog');
+  
+  let lastY = window.scrollY;
+  let velY = 0;
+  
+  function skewLoop() {
+    velY *= 0.9; // Friction
+    const skew = Math.max(-10, Math.min(10, velY * 0.15));
+    skewElems.forEach(el => el.style.transform = `skewY(${skew}deg)`);
+    requestAnimationFrame(skewLoop);
+  }
+  requestAnimationFrame(skewLoop);
+
   window.addEventListener('scroll', () => {
     const y = window.scrollY;
+    velY = y - lastY;
+    lastY = y;
+    
     parallaxSlow.forEach(el => el.style.transform = `translateY(${y * 0.12}px)`);
     parallaxFast.forEach(el => el.style.transform = `translateY(${y * 0.28}px)`);
+    if(scrollProg) {
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = (y / docHeight) * 100;
+      scrollProg.style.width = progress + '%';
+    }
   }, { passive: true });
+
+  // ══════════════════════════════════════════
+  //  BOKEH DUST MOUSE TRAIL
+  // ══════════════════════════════════════════
+  (function initDust() {
+    const canvas = document.getElementById('dust-canvas');
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+    
+    const particles = [];
+    document.addEventListener('mousemove', e => {
+      // Spawn particles on move
+      if(Math.random() > 0.4) {
+        particles.push({
+          x: e.clientX, y: e.clientY,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          life: 1, size: Math.random() * 3 + 1
+        });
+      }
+    });
+
+    (function loop() {
+      requestAnimationFrame(loop);
+      ctx.clearRect(0, 0, W, H);
+      for(let i=particles.length-1; i>=0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+        if(p.life <= 0) { particles.splice(i, 1); continue; }
+        ctx.fillStyle = `rgba(255, 107, 61, ${p.life * 0.6})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+        ctx.fill();
+      }
+    })();
+  })();
+
+  // ══════════════════════════════════════════
+  //  THE "ACTION" EASTER EGG
+  // ══════════════════════════════════════════
+  let konamiCode = 'ACTION';
+  let konamiIndex = 0;
+  window.addEventListener('keydown', e => {
+    if(e.key.toUpperCase() === konamiCode[konamiIndex]) {
+      konamiIndex++;
+      if(konamiIndex === konamiCode.length) {
+        konamiIndex = 0;
+        // Trigger Easter Egg
+        if(audioCtx && audioCtx.state !== 'suspended') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(50, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.5);
+          gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+          osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        }
+        document.body.classList.add('easter-egg-active');
+        setTimeout(() => document.body.classList.remove('easter-egg-active'), 2000);
+      }
+    } else {
+      konamiIndex = 0;
+    }
+  });
 
   // ══════════════════════════════════════════
   //  RIPPLE ON LINKS & BUTTONS
@@ -1749,20 +2221,36 @@
   });
 
   // ══════════════════════════════════════════
-  //  SHUTTER WIPE on anchor nav clicks
+  //  SHUTTER WIPE & SPA TRANSITIONS
   // ══════════════════════════════════════════
   const shutter = document.getElementById('shutter');
-  document.querySelectorAll('a[href^="#"]').forEach(link => {
+  document.querySelectorAll('a').forEach(link => {
     link.addEventListener('click', e => {
-      const target = document.querySelector(link.getAttribute('href'));
-      if (!target) return;
-      e.preventDefault();
-      shutter.classList.add('wipe-in');
-      setTimeout(() => {
-        target.scrollIntoView({ behavior: 'instant' });
-        shutter.classList.replace('wipe-in', 'wipe-out');
-        setTimeout(() => { shutter.classList.remove('wipe-out'); }, 520);
-      }, 500);
+      const href = link.getAttribute('href');
+      if (!href) return;
+      
+      // Smooth scroll for anchors
+      if (href.startsWith('#')) {
+        const target = document.querySelector(href);
+        if (!target) return;
+        e.preventDefault();
+        shutter.classList.add('wipe-in');
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: 'instant' });
+          shutter.classList.replace('wipe-in', 'wipe-out');
+          setTimeout(() => { shutter.classList.remove('wipe-out'); }, 520);
+        }, 500);
+        return;
+      }
+      
+      // SPA interception for HTML pages
+      if (href.endsWith('.html') && !link.target) {
+        e.preventDefault();
+        shutter.classList.add('wipe-in');
+        setTimeout(() => {
+          window.location.href = href;
+        }, 500);
+      }
     });
   });
   </script>
