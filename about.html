@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — Abdul Wahid · ABDDEVELOPER</title>
+  <meta name="description" content="About Abdul Wahid — Creative Developer at ABDDEVELOPER." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,300&family=Inter:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { obsidian:'#0B0D12', panel:'#11141B', paper:'#F3F1EC', ember:'#FF6B3D', glass:'#6FE3D9', steel:'#8A93A6', line:'#262B36' },
+        fontFamily: { display:['Fraunces','serif'], mono:['Space Mono','monospace'], body:['Inter','sans-serif'] }
+      }}
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --obsidian:#0B0D12; --panel:#11141B; --paper:#F3F1EC; --ember:#FF6B3D; --glass:#6FE3D9; --steel:#8A93A6; --line:#262B36; }
+    html { scroll-behavior: smooth; }
+    ::selection { background: var(--ember); color: var(--obsidian); }
+    * { scrollbar-width: thin; scrollbar-color: var(--line) var(--obsidian); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--obsidian); }
+    ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+    body { background: var(--obsidian); color: var(--paper); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+    /* grain */
+    .grain { position: fixed; inset: 0; z-index: 50; pointer-events: none; opacity: 0.05; mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+      background-size: 160px; }
+    /* scanlines */
+    .scanlines { position: fixed; inset: 0; z-index: 48; pointer-events: none; opacity: 0.035;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.8) 2px, rgba(0,0,0,0.8) 3px); }
+
+    /* navbar */
+    #navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 40; border-bottom: 1px solid transparent;
+      transition: background 0.5s, border-color 0.5s; }
+    #navbar.scrolled { background: rgba(11,13,18,0.8); backdrop-filter: blur(12px); border-color: var(--line); }
+    .nav-inner { max-width: 72rem; margin: 0 auto; padding: 1rem 2.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-family: 'Fraunces', serif; font-size: 1.125rem; color: var(--paper); text-decoration: none; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--steel); text-decoration: none; transition: color 0.3s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--ember); }
+    @media (max-width: 640px) { .nav-links { display: none; } .nav-inner { padding: 1rem 1.5rem; } }
+
+    /* scroll progress */
+    #scroll-prog { position: fixed; top: 0; left: 0; z-index: 9000; height: 2px; width: 0%; background: linear-gradient(90deg, var(--ember), var(--glass)); pointer-events: none; }
+
+    /* page hero */
+    .page-hero { padding: 9rem 2.5rem 4rem; max-width: 72rem; margin: 0 auto; }
+    .page-hero .scene-label { font-family: 'Space Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.35em; color: var(--glass); margin-bottom: 1rem; }
+    .page-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(3.5rem, 10vw, 8rem); letter-spacing: -0.04em; line-height: 0.95; overflow: hidden; }
+    .page-title span { display: inline-block; animation: slideUp 0.9s cubic-bezier(0.22,1,0.36,1) 0.2s both; }
+    @keyframes slideUp { from { transform: translateY(110%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .page-divider { height: 1px; background: var(--line); margin: 3rem 0; animation: growLine 1s ease 0.5s both; transform-origin: left; }
+    @keyframes growLine { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+    /* reveal */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-d1 { transition-delay: 0.1s; } .reveal-d2 { transition-delay: 0.2s; } .reveal-d3 { transition-delay: 0.3s; }
+
+    /* about grid */
+    .about-grid { display: grid; gap: 4rem; max-width: 72rem; margin: 0 auto; padding: 0 2.5rem 6rem; }
+    @media (min-width: 1024px) { .about-grid { grid-template-columns: 1.3fr 1fr; } }
+    .about-text p { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(1.2rem, 2.5vw, 1.75rem); line-height: 1.7; color: var(--paper); margin-bottom: 1.5rem; }
+    .spec-sheet { border: 1px solid var(--line); background: rgba(17,20,27,0.7); padding: 2rem; }
+    .spec-title { font-family: 'Space Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.3em; color: var(--steel); margin-bottom: 1.5rem; }
+    .spec-row { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--line); padding-bottom: 0.875rem; margin-bottom: 0.875rem; flex-wrap: wrap; }
+    .spec-row:last-child { border: none; margin: 0; padding: 0; }
+    .spec-label { font-family: 'Space Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--ember); }
+    .spec-value { font-size: 0.875rem; color: var(--paper); }
+
+    /* stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(2,1fr); border: 1px solid var(--line); gap: 1px; background: var(--line); max-width: 72rem; margin: 0 auto; }
+    @media (min-width: 1024px) { .stats-grid { grid-template-columns: repeat(4,1fr); } }
+    .stat-cell { background: var(--panel); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; padding: 3rem 1rem; text-align: center; opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1); }
+    .stat-cell.visible { opacity: 1; transform: none; }
+    .stat-cell:nth-child(2) { transition-delay: 0.1s; } .stat-cell:nth-child(3) { transition-delay: 0.2s; } .stat-cell:nth-child(4) { transition-delay: 0.3s; }
+    .stat-value { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(2.5rem,6vw,4rem); color: var(--ember); line-height: 1; }
+    .stat-label { font-family: 'Space Mono', monospace; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.3em; color: var(--steel); }
+
+    /* process */
+    .process-grid { display: grid; max-width: 72rem; margin: 3rem auto 0; padding: 0 2.5rem; }
+    @media (min-width: 1024px) { .process-grid { grid-template-columns: repeat(4,1fr); } }
+    .process-step { padding: 2rem 0; border-bottom: 1px solid var(--line); opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1); }
+    .process-step.visible { opacity: 1; transform: none; }
+    @media (min-width: 1024px) { .process-step { border-bottom: none; border-right: 1px solid var(--line); padding: 0 2rem; } .process-step:first-child { padding-left: 0; } .process-step:last-child { border-right: none; padding-right: 0; } }
+    .process-step:nth-child(2) { transition-delay: 0.1s; } .process-step:nth-child(3) { transition-delay: 0.2s; } .process-step:nth-child(4) { transition-delay: 0.3s; }
+    .process-num { display: inline-flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; border: 1px solid var(--ember); font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--ember); margin-bottom: 1.5rem; }
+    .process-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: 1.2rem; color: var(--paper); margin-bottom: 0.75rem; }
+    .process-desc { font-size: 0.875rem; line-height: 1.75; color: var(--steel); }
+
+    /* mag btn */
+    .mag-btn { display: inline-flex; align-items: center; gap: 0.5rem; border: 1px solid var(--ember); background: rgba(255,107,61,0.08); padding: 0.75rem 1.5rem; font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--ember); text-decoration: none; position: relative; overflow: hidden; }
+    .mag-btn::before { content:''; position: absolute; inset: 0; background: var(--ember); transform: scaleX(0); transform-origin: left; transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
+    .mag-btn:hover::before { transform: scaleX(1); }
+    .mag-btn:hover { color: var(--obsidian); }
+    .mag-btn span { position: relative; z-index: 1; }
+
+    /* footer */
+    footer { border-top: 1px solid var(--line); }
+    .footer-inner { max-width: 72rem; margin: 0 auto; padding: 1.5rem 2.5rem; display: flex; align-items: center; justify-content: space-between; font-family: 'Space Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--steel); }
+    .footer-top { color: var(--paper); text-decoration: none; }
+    .footer-top:hover { color: var(--ember); }
+  </style>
+</head>
+<body>
+  <div class="grain"></div>
+  <div class="scanlines"></div>
+  <div id="scroll-prog"></div>
+
+  <!-- Cursor -->
+  <div id="cursor-dot" style="position:fixed;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);width:6px;height:6px;background:var(--ember);will-change:left,top;"></div>
+  <div id="cursor-ring" style="position:fixed;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);width:36px;height:36px;border:1.5px solid rgba(255,107,61,0.5);will-change:left,top;transition:width 0.35s,height 0.35s,border-color 0.35s;opacity:0.7;"></div>
+
+  <!-- Navbar -->
+  <header id="navbar">
+    <nav class="nav-inner">
+      <a href="index.html" class="nav-logo">ABDDEVELOPER</a>
+      <ul class="nav-links">
+        <li><a href="index.html">[ Home ]</a></li>
+        <li><a href="about.html" class="active">[ About ]</a></li>
+        <li><a href="work.html">[ Work ]</a></li>
+        <li><a href="contact.html">[ Contact ]</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Page Hero -->
+  <div class="page-hero">
+    <p class="scene-label">Scene 00 — About</p>
+    <h1 class="page-title"><span>About Me</span></h1>
+    <div class="page-divider"></div>
+  </div>
+
+  <!-- About Grid -->
+  <div class="about-grid">
+    <div class="about-text">
+      <p class="reveal">I'm a front-end engineer who treats the browser like a camera — framing, lighting, and pacing every interaction so it feels considered rather than assembled.</p>
+      <p class="reveal reveal-d1">Over the last six years I've built product UIs, WebGL experiences, and brand sites for studios and startups, focusing on the moments where motion actually clarifies what's happening on screen.</p>
+      <a href="work.html" class="mag-btn reveal reveal-d2" style="margin-top:1.5rem;"><span>View My Work →</span></a>
+    </div>
+    <div class="spec-sheet reveal reveal-d1">
+      <p class="spec-title">Spec Sheet</p>
+      <div class="spec-row"><span class="spec-label">Body</span><span class="spec-value">React, Next.js, Node.js</span></div>
+      <div class="spec-row"><span class="spec-label">Lens</span><span class="spec-value">Three.js, WebGL, GLSL shaders</span></div>
+      <div class="spec-row"><span class="spec-label">Exposure</span><span class="spec-value">Motion &amp; interaction design</span></div>
+      <div class="spec-row"><span class="spec-label">Focus</span><span class="spec-value">Accessibility &amp; performance</span></div>
+      <div class="spec-row"><span class="spec-label">ISO</span><span class="spec-value">TypeScript, Tailwind CSS</span></div>
+      <div class="spec-row"><span class="spec-label">Frame rate</span><span class="spec-value">Framer Motion, GSAP, 60fps</span></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <section style="padding:0 2.5rem 5rem;">
+    <div class="stats-grid">
+      <div class="stat-cell" data-count="6" data-suffix="+"><span class="stat-value">0</span><span class="stat-label">Years crafting</span></div>
+      <div class="stat-cell" data-count="40" data-suffix="+"><span class="stat-value">0</span><span class="stat-label">Projects shipped</span></div>
+      <div class="stat-cell" data-count="99" data-suffix=""><span class="stat-value">0</span><span class="stat-label">Lighthouse score</span></div>
+      <div class="stat-cell"><span class="stat-value">∞</span><span class="stat-label">Frames per second</span></div>
+    </div>
+  </section>
+
+  <!-- Process -->
+  <section style="border-top:1px solid var(--line);padding:5rem 0;">
+    <div style="max-width:72rem;margin:0 auto;padding:0 2.5rem;">
+      <p class="scene-label" style="margin-bottom:0.75rem;">How It's Made</p>
+      <h2 style="font-family:'Fraunces',serif;font-weight:300;font-size:clamp(2.5rem,6vw,4.5rem);letter-spacing:-0.03em;line-height:1;" class="reveal">The Process</h2>
+    </div>
+    <div class="process-grid">
+      <div class="process-step"><div class="process-num">01</div><p class="process-title">Frame the Shot</p><p class="process-desc">Every project starts with deep research — understanding brand, audience, and story before a line of code is written.</p></div>
+      <div class="process-step"><div class="process-num">02</div><p class="process-title">Expose the Idea</p><p class="process-desc">Wireframes and motion explorations reveal the pacing — I prototype early so we feel the rhythm before full production.</p></div>
+      <div class="process-step"><div class="process-num">03</div><p class="process-title">Develop the Film</p><p class="process-desc">Engineering with obsessive attention to performance, accessibility, and the micro-details that make it memorable.</p></div>
+      <div class="process-step"><div class="process-num">04</div><p class="process-title">Screen &amp; Iterate</p><p class="process-desc">Real user testing and refinement cycles until every scene plays exactly as intended — then we ship.</p></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <span>© 2025 Abdul Wahid · ABDDEVELOPER</span>
+      <a href="#" class="footer-top">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script>
+    // Navbar scroll
+    const nb = document.getElementById('navbar');
+    window.addEventListener('scroll', () => nb.classList.toggle('scrolled', scrollY > 40), { passive: true });
+    // Scroll progress
+    const prog = document.getElementById('scroll-prog');
+    window.addEventListener('scroll', () => { prog.style.width = (scrollY / (document.body.scrollHeight - innerHeight) * 100) + '%'; }, { passive: true });
+    // Reveal
+    const obs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } }), { threshold: 0.18 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+    // Stats
+    const statObs = new IntersectionObserver(es => es.forEach(e => {
+      if (!e.isIntersecting) return;
+      const c = e.target; c.classList.add('visible');
+      if (!c.dataset.count) return;
+      const t = +c.dataset.count, suf = c.dataset.suffix||'', v = c.querySelector('.stat-value');
+      let n = 0; const step = Math.ceil(t/40);
+      const iv = setInterval(() => { n = Math.min(n+step,t); v.textContent = n+suf; if(n>=t) clearInterval(iv); }, 35);
+      statObs.unobserve(c);
+    }), { threshold: 0.4 });
+    document.querySelectorAll('.stat-cell').forEach(el => statObs.observe(el));
+    // Process
+    const pObs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){e.target.classList.add('visible');pObs.unobserve(e.target);} }), { threshold: 0.2 });
+    document.querySelectorAll('.process-step').forEach(el => pObs.observe(el));
+    // Cursor
+    const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring');
+    let cx=-200,cy=-200,rx=-200,ry=-200;
+    document.addEventListener('mousemove', e => { cx=e.clientX; cy=e.clientY; });
+    (function loop(){ requestAnimationFrame(loop); rx+=(cx-rx)*0.12; ry+=(cy-ry)*0.12; dot.style.left=cx+'px'; dot.style.top=cy+'px'; ring.style.left=rx+'px'; ring.style.top=ry+'px'; })();
+  </script>
+</body>
+</html>

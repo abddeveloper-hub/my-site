@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Work — Abdul Wahid · ABDDEVELOPER</title>
+  <meta name="description" content="Selected projects by Abdul Wahid — ABDDEVELOPER." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,300&family=Inter:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { obsidian:'#0B0D12', panel:'#11141B', paper:'#F3F1EC', ember:'#FF6B3D', glass:'#6FE3D9', steel:'#8A93A6', line:'#262B36' },
+        fontFamily: { display:['Fraunces','serif'], mono:['Space Mono','monospace'], body:['Inter','sans-serif'] }
+      }}
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --obsidian:#0B0D12; --panel:#11141B; --paper:#F3F1EC; --ember:#FF6B3D; --glass:#6FE3D9; --steel:#8A93A6; --line:#262B36; }
+    html { scroll-behavior: smooth; }
+    ::selection { background: var(--ember); color: var(--obsidian); }
+    * { scrollbar-width: thin; scrollbar-color: var(--line) var(--obsidian); }
+    body { background: var(--obsidian); color: var(--paper); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+    .grain { position: fixed; inset: 0; z-index: 50; pointer-events: none; opacity: 0.05; mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); background-size: 160px; }
+    .scanlines { position: fixed; inset: 0; z-index: 48; pointer-events: none; opacity: 0.035;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.8) 2px, rgba(0,0,0,0.8) 3px); }
+    #scroll-prog { position: fixed; top: 0; left: 0; z-index: 9000; height: 2px; width: 0%; background: linear-gradient(90deg, var(--ember), var(--glass)); pointer-events: none; }
+    #navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 40; border-bottom: 1px solid transparent; transition: background 0.5s, border-color 0.5s; }
+    #navbar.scrolled { background: rgba(11,13,18,0.8); backdrop-filter: blur(12px); border-color: var(--line); }
+    .nav-inner { max-width: 72rem; margin: 0 auto; padding: 1rem 2.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-family: 'Fraunces', serif; font-size: 1.125rem; color: var(--paper); text-decoration: none; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--steel); text-decoration: none; transition: color 0.3s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--ember); }
+    @media (max-width: 640px) { .nav-links { display: none; } .nav-inner { padding: 1rem 1.5rem; } }
+
+    .page-hero { padding: 9rem 2.5rem 4rem; max-width: 72rem; margin: 0 auto; }
+    .scene-label { font-family: 'Space Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.35em; color: var(--glass); margin-bottom: 1rem; display: block; }
+    .page-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(3.5rem, 10vw, 8rem); letter-spacing: -0.04em; line-height: 0.95; overflow: hidden; }
+    .page-title span { display: inline-block; animation: slideUp 0.9s cubic-bezier(0.22,1,0.36,1) 0.2s both; }
+    @keyframes slideUp { from { transform: translateY(110%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .page-divider { height: 1px; background: var(--line); margin: 3rem 0; animation: growLine 1s ease 0.5s both; transform-origin: left; }
+    @keyframes growLine { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-d1 { transition-delay: 0.1s; } .reveal-d2 { transition-delay: 0.2s; }
+
+    /* project cards */
+    .projects-wrap { max-width: 72rem; margin: 0 auto; padding: 0 2.5rem 6rem; }
+    .project-card {
+      display: grid; gap: 2.5rem; border-bottom: 1px solid var(--line); padding: 4rem 0;
+      transform-style: preserve-3d;
+    }
+    .project-card:first-child { padding-top: 0; }
+    .project-card:last-child { border-bottom: none; }
+    @media (min-width: 1024px) { .project-card { grid-template-columns: 1fr 1.1fr; align-items: center; } }
+    @media (min-width: 1024px) { .project-card--odd { direction: rtl; } .project-card--odd > * { direction: ltr; } }
+
+    .project-visual { position: relative; aspect-ratio: 16/10; overflow: hidden; border: 1px solid var(--line); cursor: pointer; }
+    .project-visual--even { background: linear-gradient(135deg, #1a0f0a, #0b0d12 55%, #11141b); }
+    .project-visual--odd  { background: linear-gradient(135deg, #0a1413, #0b0d12 55%, #11141b); }
+    .project-visual:hover { transform: scale(1.02); transition: transform 0.7s ease; }
+    .proj-num { position: absolute; bottom: -1.5rem; left: -0.5rem; font-family: 'Fraunces',serif; font-weight:300; font-size:9rem; line-height:1; pointer-events:none; user-select:none; }
+    .proj-num--even { color: rgba(255,107,61,0.09); }
+    .proj-num--odd  { color: rgba(111,227,217,0.09); }
+    .proj-scene { position: absolute; left: 1rem; top: 1rem; font-family:'Space Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.3em; }
+    .proj-scene--even { color: var(--ember); }
+    .proj-scene--odd  { color: var(--glass); }
+
+    /* tilt card */
+    .tilt-card { transition: transform 0.15s ease, box-shadow 0.3s ease; }
+    .tilt-card:hover { box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 40px rgba(255,107,61,0.06); }
+
+    .project-info h3 { font-family:'Fraunces',serif; font-weight:300; font-size:clamp(1.75rem,3vw,2.5rem); letter-spacing:-0.02em; color:var(--paper); }
+    .project-meta { display:flex; flex-wrap:wrap; gap:0.4rem 0.75rem; margin:0.75rem 0 1rem; font-family:'Space Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.15em; color:var(--steel); }
+    .project-meta span:first-child { color:var(--glass); }
+    .project-tags { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:1rem; }
+    .project-tag { font-family:'Space Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.15em; border:1px solid var(--line); padding:0.25rem 0.6rem; color:var(--steel); }
+    .project-desc { font-size:0.9375rem; line-height:1.75; color:var(--steel); margin-bottom:1.5rem; }
+    .project-link { font-family:'Space Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.2em; text-decoration:none; position:relative; }
+    .project-link--even { color:var(--ember); }
+    .project-link--odd  { color:var(--glass); }
+    .project-link::after { content:''; position:absolute; left:0; bottom:-2px; width:0; height:1px; background:currentColor; transition:width 0.3s; }
+    .project-link:hover::after { width:100%; }
+
+    footer { border-top: 1px solid var(--line); }
+    .footer-inner { max-width:72rem; margin:0 auto; padding:1.5rem 2.5rem; display:flex; align-items:center; justify-content:space-between; font-family:'Space Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.25em; color:var(--steel); }
+    .footer-top { color:var(--paper); text-decoration:none; }
+    .footer-top:hover { color:var(--ember); }
+  </style>
+</head>
+<body>
+  <div class="grain"></div>
+  <div class="scanlines"></div>
+  <div id="scroll-prog"></div>
+  <div id="cursor-dot" style="position:fixed;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);width:6px;height:6px;background:var(--ember);will-change:left,top;"></div>
+  <div id="cursor-ring" style="position:fixed;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);width:36px;height:36px;border:1.5px solid rgba(255,107,61,0.5);will-change:left,top;transition:width 0.35s,height 0.35s,border-color 0.35s;opacity:0.7;"></div>
+
+  <header id="navbar">
+    <nav class="nav-inner">
+      <a href="index.html" class="nav-logo">ABDDEVELOPER</a>
+      <ul class="nav-links">
+        <li><a href="index.html">[ Home ]</a></li>
+        <li><a href="about.html">[ About ]</a></li>
+        <li><a href="work.html" class="active">[ Work ]</a></li>
+        <li><a href="contact.html">[ Contact ]</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="page-hero">
+    <span class="scene-label">Selected Work</span>
+    <h1 class="page-title"><span>The Reel</span></h1>
+    <div class="page-divider"></div>
+  </div>
+
+  <div class="projects-wrap">
+
+    <!-- Project 01 -->
+    <article class="project-card reveal tilt-card">
+      <div class="project-visual project-visual--even">
+        <span class="proj-num proj-num--even">01</span>
+        <span class="proj-scene proj-scene--even">Scene 01</span>
+      </div>
+      <div class="project-info">
+        <h3>Aperture</h3>
+        <div class="project-meta"><span>Lead Front-End Developer</span><span>·</span><span>2025</span></div>
+        <div class="project-tags">
+          <span class="project-tag">Next.js</span><span class="project-tag">Three.js</span><span class="project-tag">Tailwind</span>
+        </div>
+        <p class="project-desc">A commerce platform for a camera-gear retailer with a real-time 3D product configurer — swap lenses, bodies, and finishes and see the rig update instantly.</p>
+        <a href="#" class="project-link project-link--even">View Project →</a>
+      </div>
+    </article>
+
+    <!-- Project 02 -->
+    <article class="project-card project-card--odd reveal tilt-card">
+      <div class="project-visual project-visual--odd">
+        <span class="proj-num proj-num--odd">02</span>
+        <span class="proj-scene proj-scene--odd">Scene 02</span>
+      </div>
+      <div class="project-info">
+        <h3>Halcyon</h3>
+        <div class="project-meta"><span>Brand Site &amp; Motion Design</span><span>·</span><span>2024</span></div>
+        <div class="project-tags">
+          <span class="project-tag">React</span><span class="project-tag">Framer Motion</span><span class="project-tag">GSAP</span>
+        </div>
+        <p class="project-desc">Marketing site for a design studio built around a single orchestrated scroll sequence — typography, imagery, and layout reflow together as one continuous take.</p>
+        <a href="#" class="project-link project-link--odd">View Project →</a>
+      </div>
+    </article>
+
+    <!-- Project 03 -->
+    <article class="project-card reveal tilt-card">
+      <div class="project-visual project-visual--even">
+        <span class="proj-num proj-num--even">03</span>
+        <span class="proj-scene proj-scene--even">Scene 03</span>
+      </div>
+      <div class="project-info">
+        <h3>Wavelength</h3>
+        <div class="project-meta"><span>WebGL Engineer</span><span>·</span><span>2023</span></div>
+        <div class="project-tags">
+          <span class="project-tag">Three.js</span><span class="project-tag">GLSL</span><span class="project-tag">Web Audio API</span>
+        </div>
+        <p class="project-desc">An audio-reactive visualizer that turns any track into a field of refracting particles, with shader parameters mapped to live frequency data.</p>
+        <a href="#" class="project-link project-link--even">View Project →</a>
+      </div>
+    </article>
+
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span>© 2025 Abdul Wahid · ABDDEVELOPER</span>
+      <a href="#" class="footer-top">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script>
+    const nb = document.getElementById('navbar');
+    window.addEventListener('scroll', () => nb.classList.toggle('scrolled', scrollY > 40), { passive: true });
+    const prog = document.getElementById('scroll-prog');
+    window.addEventListener('scroll', () => { prog.style.width = (scrollY / (document.body.scrollHeight - innerHeight) * 100) + '%'; }, { passive: true });
+    const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);} }), { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+    // 3D Tilt
+    document.querySelectorAll('.tilt-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform = `perspective(900px) rotateY(${x*8}deg) rotateX(${-y*6}deg) scale(1.01)`;
+      });
+      card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+    });
+    // Cursor
+    const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring');
+    let cx=-200,cy=-200,rx=-200,ry=-200;
+    document.addEventListener('mousemove', e => { cx=e.clientX; cy=e.clientY; });
+    (function loop(){ requestAnimationFrame(loop); rx+=(cx-rx)*0.12; ry+=(cy-ry)*0.12; dot.style.left=cx+'px'; dot.style.top=cy+'px'; ring.style.left=rx+'px'; ring.style.top=ry+'px'; })();
+  </script>
+</body>
+</html>

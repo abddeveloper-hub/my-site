@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — Abdul Wahid · ABDDEVELOPER</title>
+  <meta name="description" content="Get in touch with Abdul Wahid — ABDDEVELOPER." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,300&family=Inter:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { obsidian:'#0B0D12', panel:'#11141B', paper:'#F3F1EC', ember:'#FF6B3D', glass:'#6FE3D9', steel:'#8A93A6', line:'#262B36' },
+        fontFamily: { display:['Fraunces','serif'], mono:['Space Mono','monospace'], body:['Inter','sans-serif'] }
+      }}
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --obsidian:#0B0D12; --panel:#11141B; --paper:#F3F1EC; --ember:#FF6B3D; --glass:#6FE3D9; --steel:#8A93A6; --line:#262B36; }
+    html { scroll-behavior: smooth; }
+    ::selection { background: var(--ember); color: var(--obsidian); }
+    * { scrollbar-width: thin; scrollbar-color: var(--line) var(--obsidian); }
+    body { background: var(--obsidian); color: var(--paper); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+    .grain { position: fixed; inset: 0; z-index: 50; pointer-events: none; opacity: 0.05; mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); background-size: 160px; }
+    .scanlines { position: fixed; inset: 0; z-index: 48; pointer-events: none; opacity: 0.035;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.8) 2px, rgba(0,0,0,0.8) 3px); }
+    #scroll-prog { position: fixed; top: 0; left: 0; z-index: 9000; height: 2px; width: 0%; background: linear-gradient(90deg, var(--ember), var(--glass)); pointer-events: none; }
+    #navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 40; border-bottom: 1px solid transparent; transition: background 0.5s, border-color 0.5s; }
+    #navbar.scrolled { background: rgba(11,13,18,0.8); backdrop-filter: blur(12px); border-color: var(--line); }
+    .nav-inner { max-width: 72rem; margin: 0 auto; padding: 1rem 2.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-family: 'Fraunces', serif; font-size: 1.125rem; color: var(--paper); text-decoration: none; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--steel); text-decoration: none; transition: color 0.3s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--ember); }
+    @media (max-width: 640px) { .nav-links { display: none; } .nav-inner { padding: 1rem 1.5rem; } }
+
+    .scene-label { font-family: 'Space Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.35em; color: var(--glass); margin-bottom: 1rem; display: block; }
+    .page-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(3.5rem, 10vw, 8rem); letter-spacing: -0.04em; line-height: 0.95; overflow: hidden; }
+    .page-title span { display: inline-block; animation: slideUp 0.9s cubic-bezier(0.22,1,0.36,1) 0.2s both; }
+    @keyframes slideUp { from { transform: translateY(110%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .page-divider { height: 1px; background: var(--line); margin: 3rem 0; animation: growLine 1s ease 0.5s both; transform-origin: left; }
+    @keyframes growLine { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-d1 { transition-delay: 0.1s; } .reveal-d2 { transition-delay: 0.2s; } .reveal-d3 { transition-delay: 0.3s; }
+
+    /* contact big box */
+    .contact-wrap { max-width: 72rem; margin: 0 auto; padding: 9rem 2.5rem 2rem; }
+    .contact-main { background: var(--paper); color: var(--obsidian); padding: 5rem 4rem; }
+    @media (max-width: 640px) { .contact-main { padding: 3rem 1.5rem; } }
+    .contact-heading { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(2rem,5vw,3.5rem); line-height: 1.15; letter-spacing: -0.02em; max-width: 28rem; margin-bottom: 1.5rem; }
+    .contact-sub { font-size: 0.9375rem; line-height: 1.75; color: rgba(11,13,18,0.65); max-width: 26rem; margin-bottom: 2.5rem; }
+
+    /* mag btn dark */
+    .mag-btn-dark { display: inline-flex; align-items: center; gap: 0.5rem; border: 1px solid var(--obsidian); background: transparent; padding: 0.75rem 1.5rem; font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--obsidian); text-decoration: none; position: relative; overflow: hidden; }
+    .mag-btn-dark::before { content:''; position:absolute; inset:0; background:var(--obsidian); transform:scaleX(0); transform-origin:left; transition:transform 0.4s cubic-bezier(0.22,1,0.36,1); }
+    .mag-btn-dark:hover::before { transform: scaleX(1); }
+    .mag-btn-dark:hover { color: var(--paper); }
+    .mag-btn-dark span { position: relative; z-index: 1; }
+
+    /* socials */
+    .socials { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 2rem; }
+    .social-btn { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border: 1px solid var(--line); font-family: 'Space Mono', monospace; font-size: 0.6rem; text-transform: uppercase; color: var(--steel); text-decoration: none; transition: border-color 0.3s, color 0.3s; }
+    .social-btn:hover { border-color: var(--ember); color: var(--ember); }
+
+    /* testimonials */
+    .testimonial-wrap { position: relative; min-height: 14rem; overflow: hidden; }
+    .testimonial-slide { position: absolute; inset: 0; opacity: 0; transform: translateX(60px); transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22,1,0.36,1); pointer-events: none; }
+    .testimonial-slide.active { opacity: 1; transform: none; pointer-events: auto; }
+    .testimonial-slide.exit { opacity: 0; transform: translateX(-60px); }
+    .testimonial-quote { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(1.2rem,2.5vw,1.875rem); line-height: 1.65; color: var(--paper); }
+    .testimonial-author { display: flex; align-items: center; gap: 1rem; margin-top: 2rem; }
+    .t-line { width: 3rem; height: 1px; background: var(--ember); flex-shrink: 0; }
+    .t-name { font-size: 0.875rem; font-weight: 500; color: var(--paper); }
+    .t-role { font-family: 'Space Mono', monospace; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--steel); }
+    .t-controls { display: flex; align-items: center; gap: 1rem; margin-top: 2.5rem; }
+    .t-btn { width: 2.5rem; height: 2.5rem; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: var(--steel); cursor: pointer; background: transparent; font-size: 1rem; transition: border-color 0.3s, color 0.3s; }
+    .t-btn:hover { border-color: var(--ember); color: var(--ember); }
+    .t-dots { display: flex; gap: 0.5rem; }
+    .t-dot { width: 2rem; height: 1px; background: var(--line); cursor: pointer; border: none; padding: 0; transition: background 0.3s; }
+    .t-dot.active { background: var(--ember); }
+
+    footer { border-top: 1px solid var(--line); margin-top: 6rem; }
+    .footer-inner { max-width: 72rem; margin: 0 auto; padding: 1.5rem 2.5rem; display: flex; align-items: center; justify-content: space-between; font-family: 'Space Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--steel); }
+    .footer-top { color: var(--paper); text-decoration: none; }
+    .footer-top:hover { color: var(--ember); }
+  </style>
+</head>
+<body>
+  <div class="grain"></div>
+  <div class="scanlines"></div>
+  <div id="scroll-prog"></div>
+  <div id="cursor-dot" style="position:fixed;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);width:6px;height:6px;background:var(--ember);will-change:left,top;"></div>
+  <div id="cursor-ring" style="position:fixed;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);width:36px;height:36px;border:1.5px solid rgba(255,107,61,0.5);will-change:left,top;transition:width 0.35s,height 0.35s,border-color 0.35s;opacity:0.7;"></div>
+
+  <header id="navbar">
+    <nav class="nav-inner">
+      <a href="index.html" class="nav-logo">ABDDEVELOPER</a>
+      <ul class="nav-links">
+        <li><a href="index.html">[ Home ]</a></li>
+        <li><a href="about.html">[ About ]</a></li>
+        <li><a href="work.html">[ Work ]</a></li>
+        <li><a href="contact.html" class="active">[ Contact ]</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Contact -->
+  <div class="contact-wrap">
+    <span class="scene-label reveal">Cut To — Contact</span>
+    <h1 class="page-title reveal"><span>Let's shoot.</span></h1>
+    <div class="page-divider"></div>
+    <div class="contact-main reveal">
+      <p style="font-family:'Space Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.3em;color:rgba(11,13,18,0.5);margin-bottom:1rem;">Get in touch</p>
+      <h2 class="contact-heading">Let's make something worth watching.</h2>
+      <p class="contact-sub">Open to freelance projects, collaborations, and full-time roles where motion and engineering meet.</p>
+      <a href="mailto:hello@abddeveloper.dev" class="mag-btn-dark"><span>hello@abddeveloper.dev →</span></a>
+    </div>
+
+    <!-- Socials -->
+    <div class="socials reveal reveal-d1">
+      <a href="https://github.com/" class="social-btn" target="_blank" rel="noreferrer">GH</a>
+      <a href="https://linkedin.com/" class="social-btn" target="_blank" rel="noreferrer">LI</a>
+      <a href="https://twitter.com/" class="social-btn" target="_blank" rel="noreferrer">TW</a>
+    </div>
+  </div>
+
+  <!-- Testimonials -->
+  <section style="border-top:1px solid var(--line);margin-top:5rem;">
+    <div style="max-width:56rem;margin:0 auto;padding:5rem 2.5rem;">
+      <span class="scene-label" style="margin-bottom:3rem;">From the Audience</span>
+      <div class="testimonial-wrap" id="t-wrap">
+        <div class="testimonial-slide active">
+          <p class="testimonial-quote">"Abdul doesn't just build websites — he composes experiences. The attention to motion and detail is extraordinary."</p>
+          <div class="testimonial-author"><span class="t-line"></span><div><p class="t-name">Sara Lindqvist</p><p class="t-role">Creative Director, Studio Veil</p></div></div>
+        </div>
+        <div class="testimonial-slide">
+          <p class="testimonial-quote">"Working with ABDDEVELOPER felt like having a cinematographer on our engineering team. The result spoke for itself."</p>
+          <div class="testimonial-author"><span class="t-line"></span><div><p class="t-name">Marcus Chen</p><p class="t-role">CPO, Halcyon Labs</p></div></div>
+        </div>
+        <div class="testimonial-slide">
+          <p class="testimonial-quote">"The WebGL work on our product was beyond what we thought was possible in a browser. Clients still talk about it."</p>
+          <div class="testimonial-author"><span class="t-line"></span><div><p class="t-name">Priya Nair</p><p class="t-role">Founder, Aperture Commerce</p></div></div>
+        </div>
+      </div>
+      <div class="t-controls">
+        <button class="t-btn" id="t-prev">←</button>
+        <div class="t-dots" id="t-dots"></div>
+        <button class="t-btn" id="t-next">→</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-inner">
+      <span>© 2025 Abdul Wahid · ABDDEVELOPER</span>
+      <a href="#" class="footer-top">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script>
+    const nb = document.getElementById('navbar');
+    window.addEventListener('scroll', () => nb.classList.toggle('scrolled', scrollY > 40), { passive: true });
+    const prog = document.getElementById('scroll-prog');
+    window.addEventListener('scroll', () => { prog.style.width = (scrollY / (document.body.scrollHeight - innerHeight) * 100) + '%'; }, { passive: true });
+    const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);} }), { threshold: 0.18 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+    // Testimonials
+    const slides = document.querySelectorAll('.testimonial-slide');
+    const dotsWrap = document.getElementById('t-dots');
+    let cur = 0;
+    slides.forEach((_,i) => { const d=document.createElement('button'); d.className='t-dot'+(i===0?' active':''); d.addEventListener('click',()=>goTo(i)); dotsWrap.appendChild(d); });
+    function goTo(next) {
+      slides[cur].classList.remove('active'); slides[cur].classList.add('exit');
+      setTimeout(()=>slides[cur].classList.remove('exit'),600);
+      dotsWrap.children[cur].classList.remove('active');
+      cur=(next+slides.length)%slides.length;
+      slides[cur].classList.add('active'); dotsWrap.children[cur].classList.add('active');
+    }
+    document.getElementById('t-prev').addEventListener('click',()=>goTo(cur-1));
+    document.getElementById('t-next').addEventListener('click',()=>goTo(cur+1));
+    setInterval(()=>goTo(cur+1),6000);
+    // Cursor
+    const dot=document.getElementById('cursor-dot'),ring=document.getElementById('cursor-ring');
+    let cx=-200,cy=-200,rx=-200,ry=-200;
+    document.addEventListener('mousemove',e=>{cx=e.clientX;cy=e.clientY;});
+    (function loop(){requestAnimationFrame(loop);rx+=(cx-rx)*0.12;ry+=(cy-ry)*0.12;dot.style.left=cx+'px';dot.style.top=cy+'px';ring.style.left=rx+'px';ring.style.top=ry+'px';})();
+  </script>
+</body>
+</html>
