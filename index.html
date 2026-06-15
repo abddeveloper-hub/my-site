@@ -1440,11 +1440,20 @@
   // ══════════════════════════════════════════
   //  INTERSECTION OBSERVER (reveal)
   // ══════════════════════════════════════════
-  const revealEls = document.querySelectorAll('.reveal');
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
   }, { threshold: 0.18 });
-  revealEls.forEach(el => observer.observe(el));
+
+  // Attach observer to existing .reveal elements
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Dynamically add slide transition to EVERY text element
+  document.querySelectorAll('p, h2, h3, h4, li').forEach(el => {
+    if(!el.classList.contains('reveal') && !el.closest('.hero') && !el.closest('.process-grid') && !el.closest('.stats-grid')) {
+      el.classList.add('reveal');
+      observer.observe(el);
+    }
+  });
 
   // ══════════════════════════════════════════
   //  MARQUEE BUILD
