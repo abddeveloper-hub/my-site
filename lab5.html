@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lab 05: Audio Visualizer | Premium Engineering</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <style>
+    :root {
+      --obsidian: #050608;
+      --ember: #ff6b3d;
+      --glass: #6fe3d9;
+      --steel: #8a93a6;
+      --paper: #f3f1ec;
+      --line: #1a1e28;
+      --panel-bg: rgba(10, 12, 16, 0.85);
+      --panel-border: rgba(111, 227, 217, 0.2);
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--obsidian); color: var(--paper);
+      font-family: 'Inter', sans-serif;
+      overflow: hidden; 
+      background-color: #000;
+    }
+
+    /* ── Navbar ── */
+    nav {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 1000;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.5rem 2.5rem; mix-blend-mode: difference;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.6rem;
+      text-decoration: none; position: relative;
+    }
+    .logo-mark { transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
+    .nav-logo:hover .logo-mark { transform: scale(1.1); }
+    .logo-abd { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 1.1rem; letter-spacing: 0.1em; color: var(--paper); }
+    .logo-dev { font-family: 'Inter', sans-serif; font-weight: 300; font-size: 1.1rem; letter-spacing: 0.1em; color: var(--paper); margin-left: -0.2rem; }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 0.2em; color: var(--paper); text-decoration: none; transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--ember); }
+    .nav-mobile { display: none; }
+
+    #visualizer-canvas {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: 0;
+    }
+
+    .control-panel {
+      position: absolute; right: 2rem; top: 50%; transform: translateY(-50%);
+      width: 320px; background: var(--panel-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border); border-radius: 8px;
+      padding: 1.5rem; z-index: 100;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    
+    .panel-header {
+      font-family: 'Space Mono', monospace; font-size: 0.8rem;
+      color: var(--glass); letter-spacing: 0.2em; text-transform: uppercase;
+      margin-bottom: 1.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.5rem;
+    }
+
+    .upload-btn {
+      display: block; width: 100%; text-align: center;
+      background: rgba(111, 227, 217, 0.1); border: 1px solid var(--glass);
+      color: var(--glass); padding: 0.8rem; font-family: 'Space Mono', monospace;
+      font-size: 0.7rem; cursor: pointer; transition: all 0.3s;
+      text-transform: uppercase; letter-spacing: 0.1em; text-decoration: none;
+      margin-bottom: 1rem;
+    }
+    .upload-btn:hover { background: var(--glass); color: var(--obsidian); }
+
+    .play-btn {
+      display: block; width: 100%; text-align: center;
+      background: var(--ember); border: 1px solid var(--ember);
+      color: var(--obsidian); padding: 0.8rem; font-family: 'Space Mono', monospace;
+      font-size: 0.7rem; cursor: pointer; transition: all 0.3s;
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .play-btn:hover { background: transparent; color: var(--ember); }
+
+    #audio-upload { display: none; }
+
+    #game-info {
+      position: absolute; bottom: 2rem; left: 2.5rem; pointer-events: none;
+      font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--steel);
+      letter-spacing: 0.1em; text-transform: uppercase; z-index: 10;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-mobile { 
+        display: block; font-family: 'Space Mono', monospace; font-size: 0.7rem; 
+        text-transform: uppercase; letter-spacing: 0.2em; color: var(--paper); text-decoration: none;
+      }
+      .control-panel {
+        right: 5%; left: 5%; bottom: 2rem; top: auto; transform: none; width: 90%; padding: 1rem;
+      }
+      #game-info { top: 6rem; bottom: auto; }
+    }
+  </style>
+  <link rel="stylesheet" href="mobile.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav id="navbar">
+    <a href="index.html" class="nav-logo">
+      <svg class="logo-mark" viewBox="0 0 100 100" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,15 90,90 70,90 50,55 30,90 10,90" fill="none" stroke="#90f058" stroke-width="4" stroke-linejoin="miter" />
+        <text x="50" y="74" font-family="'Inter', sans-serif" font-weight="900" font-size="36" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" letter-spacing="-2">AW</text>
+      </svg>
+      <span class="logo-abd">ABD</span>
+      <span class="logo-dev">DEVELOPER</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">[ Home ]</a></li>
+      <li><a href="lab.html">[ Lab 01 ]</a></li>
+      <li><a href="lab2.html">[ Lab 02 ]</a></li>
+      <li><a href="lab3.html">[ Lab 03 ]</a></li>
+      <li><a href="lab4.html">[ Lab 04 ]</a></li>
+      <li><a href="lab5.html" style="color:var(--glass);">[ Lab 05: Audio ]</a></li>
+    </ul>
+    <a href="#" class="nav-mobile">[ Menu ]</a>
+  </nav>
+
+  <!-- Canvas -->
+  <canvas id="visualizer-canvas"></canvas>
+  <div id="game-info" class="glitch-text">SYNESTHESIA // Upload an audio track to begin.</div>
+
+  <!-- UI Control Panel -->
+  <div class="control-panel">
+    <div class="panel-header">/// SYNESTHESIA ENGINE</div>
+    
+    <label class="upload-btn">
+      [ Upload MP3/WAV ]
+      <input type="file" id="audio-upload" accept="audio/*">
+    </label>
+    
+    <button class="play-btn" id="play-btn">[ Play / Pause ]</button>
+    <audio id="audio-element"></audio>
+  </div>
+
+  <script src="global.js"></script>
+  <script>
+    // --- THREE.JS SETUP ---
+    const canvas = document.getElementById('visualizer-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 0, 150);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    // --- VISUAL ELEMENTS ---
+    const group = new THREE.Group();
+    scene.add(group);
+
+    // Icosahedron Core
+    const coreGeo = new THREE.IcosahedronGeometry(20, 2);
+    const coreMat = new THREE.MeshStandardMaterial({
+      color: 0xff6b3d, wireframe: true, emissive: 0xffaa00, emissiveIntensity: 0.5
+    });
+    const core = new THREE.Mesh(coreGeo, coreMat);
+    group.add(core);
+
+    // Particle Ring
+    const particleCount = 512;
+    const pGeo = new THREE.BufferGeometry();
+    const pPos = new Float32Array(particleCount * 3);
+    for(let i=0; i<particleCount; i++) {
+      const angle = (i / particleCount) * Math.PI * 2;
+      pPos[i*3] = Math.cos(angle) * 50;
+      pPos[i*3+1] = 0;
+      pPos[i*3+2] = Math.sin(angle) * 50;
+    }
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    const pMat = new THREE.PointsMaterial({
+      color: 0x6fe3d9, size: 2.0, blending: THREE.AdditiveBlending, transparent: true
+    });
+    const particles = new THREE.Points(pGeo, pMat);
+    group.add(particles);
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0x222222);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0xffeedd, 2, 500);
+    scene.add(pointLight);
+
+    // --- AUDIO SETUP ---
+    const audioElement = document.getElementById('audio-element');
+    const uploadInput = document.getElementById('audio-upload');
+    const playBtn = document.getElementById('play-btn');
+    const infoText = document.getElementById('game-info');
+
+    let audioCtx, analyser, dataArray;
+    let isPlaying = false;
+
+    uploadInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if(file) {
+        const url = URL.createObjectURL(file);
+        audioElement.src = url;
+        infoText.innerText = "TRACK LOADED // " + file.name.toUpperCase();
+        infoText.setAttribute('data-glitch', infoText.innerText);
+        if(typeof decodeText === 'function') {
+          infoText.dataset.decoded = 'false';
+          decodeText(infoText);
+        }
+      }
+    });
+
+    playBtn.addEventListener('click', () => {
+      if(!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        const source = audioCtx.createMediaElementSource(audioElement);
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);
+        analyser.fftSize = 512;
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+      }
+
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+
+      if(audioElement.paused) {
+        audioElement.play();
+        isPlaying = true;
+      } else {
+        audioElement.pause();
+        isPlaying = false;
+      }
+    });
+
+    // --- RENDER LOOP ---
+    const basePositions = new Float32Array(pPos);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+
+      group.rotation.y += 0.002;
+      group.rotation.x += 0.001;
+
+      if(analyser && isPlaying) {
+        analyser.getByteFrequencyData(dataArray);
+
+        // Core pulse based on bass
+        let bass = 0;
+        for(let i=0; i<10; i++) bass += dataArray[i];
+        bass = bass / 10;
+        
+        const scale = 1 + (bass / 255) * 1.5;
+        core.scale.set(scale, scale, scale);
+        coreMat.emissiveIntensity = 0.5 + (bass / 255) * 2;
+        pointLight.intensity = 2 + (bass / 255) * 5;
+
+        // Particle displacement based on frequency
+        const positions = pGeo.attributes.position.array;
+        for(let i=0; i<particleCount; i++) {
+          const val = dataArray[i % dataArray.length] / 255;
+          const angle = (i / particleCount) * Math.PI * 2;
+          const radius = 50 + (val * 40);
+          
+          positions[i*3] += (Math.cos(angle) * radius - positions[i*3]) * 0.1;
+          positions[i*3+1] += ((val * 30 * (i%2==0?1:-1)) - positions[i*3+1]) * 0.1;
+          positions[i*3+2] += (Math.sin(angle) * radius - positions[i*3+2]) * 0.1;
+        }
+        pGeo.attributes.position.needsUpdate = true;
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

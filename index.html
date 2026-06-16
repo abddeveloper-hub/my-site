@@ -2513,7 +2513,7 @@
     </div>
 
     <div class="hero-content">
-      <p class="hero-role">Creative Developer · ABDDEVELOPER</p>
+      <p class="hero-role glitch-text">Creative Developer · ABDDEVELOPER</p>
       <h1 class="hero-name chroma">
         <span class="hero-name-word"><span>ABDUL</span></span>
         <span class="wahid-wrap">
@@ -3059,26 +3059,38 @@
       scene.add(new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 24), coreMat));
 
       // Particles
-      const particleCount = 260;
+      const particleCount = 400;
       const positions = new Float32Array(particleCount * 3);
+      const basePositions = new Float32Array(particleCount * 3);
       for (let i = 0; i < particleCount; i++) {
-        positions[i * 3] = (Math.random() - 0.5) * 16;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 10 - 2;
+        const x = (Math.random() - 0.5) * 16;
+        const y = (Math.random() - 0.5) * 10;
+        const z = (Math.random() - 0.5) * 10 - 2;
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+        basePositions[i * 3] = x;
+        basePositions[i * 3 + 1] = y;
+        basePositions[i * 3 + 2] = z;
       }
       const pGeo = new THREE.BufferGeometry();
       pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      const pMat = new THREE.PointsMaterial({ color: 0x8a93a6, size: 0.035, sizeAttenuation: true, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
+      const pMat = new THREE.PointsMaterial({ color: 0x6fe3d9, size: 0.05, sizeAttenuation: true, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
       const particles = new THREE.Points(pGeo, pMat);
       scene.add(particles);
 
-      // Mouse
+      // Mouse interaction
       const mouse = { x: 0, y: 0 };
+      const mouse2D = new THREE.Vector2(-100, -100);
+      const raycaster = new THREE.Raycaster();
+      const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (!prefersReduced) {
         window.addEventListener('mousemove', e => {
           mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
           mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+          mouse2D.x = mouse.x;
+          mouse2D.y = mouse.y;
         });
       }
 
@@ -3104,6 +3116,40 @@
           bigSphereGroup.rotation.y += 0.001;
           bigSphereGroup.rotation.x += 0.0005;
           particles.rotation.y += 0.0004;
+
+          // Particle repulse logic
+          raycaster.setFromCamera(mouse2D, camera);
+          const intersectPoint = new THREE.Vector3();
+          raycaster.ray.intersectPlane(plane, intersectPoint);
+
+          const posArr = pGeo.attributes.position.array;
+          for (let i = 0; i < particleCount; i++) {
+            const bx = basePositions[i * 3];
+            const by = basePositions[i * 3 + 1];
+            const bz = basePositions[i * 3 + 2];
+            
+            // rotate base position to match the particle group rotation
+            const pvec = new THREE.Vector3(bx, by, bz);
+            pvec.applyAxisAngle(new THREE.Vector3(0, 1, 0), particles.rotation.y);
+
+            const dx = intersectPoint.x - pvec.x;
+            const dy = intersectPoint.y - pvec.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            let tx = bx;
+            let ty = by;
+
+            if (dist < 4) {
+              const force = (4 - dist) / 4;
+              tx = bx - (dx / dist) * force * 2;
+              ty = by - (dy / dist) * force * 2;
+            }
+
+            posArr[i * 3] += (tx - posArr[i * 3]) * 0.1;
+            posArr[i * 3 + 1] += (ty - posArr[i * 3 + 1]) * 0.1;
+          }
+          pGeo.attributes.position.needsUpdate = true;
+
           camera.position.x += (mouse.x * 0.6 - camera.position.x) * 0.04;
           camera.position.y += (mouse.y * 0.4 - camera.position.y) * 0.04;
           camera.lookAt(0, 0, 0);

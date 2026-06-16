@@ -400,6 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <li><a href="about.html">About</a></li>
           <li><a href="work.html">Work</a></li>
           <li><a href="lab.html">The Lab</a></li>
+          <li><a href="lab5.html">Synesthesia</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
       </div>
@@ -448,5 +449,94 @@ document.addEventListener('DOMContentLoaded', () => {
       overlay.classList.remove('active');
     });
   }
+
+  /* -------------------------------------------------------------------------- */
+  /* 11. PAGE TRANSITIONS (SHUTTER EFFECT) */
+  /* -------------------------------------------------------------------------- */
+  const shutterStyle = document.createElement('style');
+  shutterStyle.textContent = `
+    .global-shutter {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #050608; z-index: 10000; pointer-events: none;
+      transform: scaleY(1); transform-origin: bottom;
+      transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .global-shutter.open {
+      transform: scaleY(0); transform-origin: top;
+    }
+  `;
+  document.head.appendChild(shutterStyle);
+
+  const shutter = document.createElement('div');
+  shutter.className = 'global-shutter';
+  document.body.appendChild(shutter);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      shutter.classList.add('open');
+    });
+  });
+
+  document.body.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (!link) return;
+
+    const href = link.getAttribute('href');
+    const target = link.getAttribute('target');
+    
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || target === '_blank') return;
+    
+    e.preventDefault();
+    
+    const mobileOverlay = document.querySelector('.mobile-menu-overlay');
+    if (mobileOverlay) mobileOverlay.classList.remove('active');
+
+    shutter.style.transformOrigin = 'bottom';
+    shutter.classList.remove('open');
+    
+    setTimeout(() => {
+      window.location.href = href;
+    }, 700);
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /* 12. CYBERPUNK TEXT DECODING */
+  /* -------------------------------------------------------------------------- */
+  const chars = '!<>-_\\\\/[]{}—=+*^?#_';
+  
+  function decodeText(element) {
+    if(element.dataset.decoded === 'true') return;
+    element.dataset.decoded = 'true';
+
+    const originalText = element.getAttribute('data-glitch') || element.innerText;
+    if(!element.hasAttribute('data-glitch')) element.setAttribute('data-glitch', originalText);
+    
+    let iteration = 0;
+    
+    const interval = setInterval(() => {
+      element.innerText = originalText
+        .split('')
+        .map((letter, index) => {
+          if(letter === ' ') return ' ';
+          if (index < iteration) return originalText[index];
+          return chars[Math.floor(Math.random() * chars.length)];
+        })
+        .join('');
+      
+      if (iteration >= originalText.length) {
+        clearInterval(interval);
+        element.innerText = originalText;
+      }
+      iteration += 1 / 2; 
+    }, 40);
+  }
+
+  const decodeObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) decodeText(entry.target);
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.glitch-text').forEach(el => decodeObs.observe(el));
 
 });
