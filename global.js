@@ -399,8 +399,11 @@ document.addEventListener('DOMContentLoaded', () => {
           <li><a href="index.html">Home</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="work.html">Work</a></li>
-          <li><a href="lab.html">The Lab</a></li>
-          <li><a href="lab5.html">Synesthesia</a></li>
+          <li><a href="lab.html">Lab 01</a></li>
+          <li><a href="lab2.html">Lab 02</a></li>
+          <li><a href="lab3.html">Lab 03</a></li>
+          <li><a href="lab4.html">Lab 04</a></li>
+          <li><a href="lab5.html">Lab 05</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
       </div>
