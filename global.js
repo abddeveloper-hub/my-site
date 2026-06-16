@@ -467,13 +467,13 @@ document.addEventListener('DOMContentLoaded', () => {
   `;
   document.head.appendChild(shutterStyle);
 
-  const shutter = document.createElement('div');
-  shutter.className = 'global-shutter';
-  document.body.appendChild(shutter);
+  const globalShutter = document.createElement('div');
+  globalShutter.className = 'global-shutter';
+  document.body.appendChild(globalShutter);
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      shutter.classList.add('open');
+      globalShutter.classList.add('open');
     });
   });
 
@@ -491,8 +491,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileOverlay = document.querySelector('.mobile-menu-overlay');
     if (mobileOverlay) mobileOverlay.classList.remove('active');
 
-    shutter.style.transformOrigin = 'bottom';
-    shutter.classList.remove('open');
+    globalShutter.style.transformOrigin = 'bottom';
+    globalShutter.classList.remove('open');
     
     setTimeout(() => {
       window.location.href = href;
