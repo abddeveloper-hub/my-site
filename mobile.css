@@ -1,5 +1,20 @@
 /* mobile.css - Global Responsive Styles for ABDDEVELOPER */
 
+/* Base styles for mobile menu toggle */
+.nav-mobile {
+  display: none;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #f3f1ec;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.nav-mobile:hover {
+  color: #ff6b3d;
+}
+
 /* Navbar & Logo */
 @media (max-width: 640px) { 
   .nav-links { display: none !important; } 
