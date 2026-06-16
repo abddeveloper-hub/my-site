@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lab 04: Cosmic Scale | Premium Engineering</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <style>
+    /* ══ THEME TOKENS ══ */
+    :root {
+      --obsidian: #050608;
+      --ember: #ff6b3d;
+      --glass: #6fe3d9;
+      --steel: #8a93a6;
+      --paper: #f3f1ec;
+      --line: #1a1e28;
+      --panel-bg: rgba(10, 12, 16, 0.85);
+      --panel-border: rgba(111, 227, 217, 0.2);
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--obsidian); color: var(--paper);
+      font-family: 'Inter', sans-serif;
+      overflow: hidden; 
+      background-color: #000;
+    }
+
+    /* ── Navbar ── */
+    nav {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 1000;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.5rem 2.5rem; mix-blend-mode: difference;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.6rem;
+      text-decoration: none; position: relative;
+    }
+    .logo-mark { transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
+    .nav-logo:hover .logo-mark { transform: scale(1.1); }
+    .logo-abd { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 1.1rem; letter-spacing: 0.1em; color: var(--paper); }
+    .logo-dev { font-family: 'Inter', sans-serif; font-weight: 300; font-size: 1.1rem; letter-spacing: 0.1em; color: var(--paper); margin-left: -0.2rem; }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 0.2em; color: var(--paper); text-decoration: none; transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--ember); }
+
+    /* ══ GAME CANVAS ══ */
+    #cosmic-canvas {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: 0;
+    }
+
+    /* ══ CONTROL PANEL ══ */
+    .control-panel {
+      position: absolute; right: 2rem; top: 50%; transform: translateY(-50%);
+      width: 320px; background: var(--panel-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border); border-radius: 8px;
+      padding: 1.5rem; z-index: 100;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    
+    .panel-header {
+      font-family: 'Space Mono', monospace; font-size: 0.8rem;
+      color: var(--glass); letter-spacing: 0.2em; text-transform: uppercase;
+      margin-bottom: 1.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.5rem;
+    }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .tab-btn {
+      flex: 1; background: transparent; border: 1px solid var(--line);
+      color: var(--steel); padding: 0.5rem 0; font-family: 'Space Mono', monospace;
+      font-size: 0.6rem; cursor: pointer; transition: all 0.3s;
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background: rgba(255,255,255,0.05); color: var(--paper); border-color: var(--glass);
+    }
+
+    /* Controls */
+    .control-group { margin-bottom: 1.2rem; display: none; }
+    .control-group.active { display: block; }
+    .control-label {
+      display: flex; justify-content: space-between;
+      font-family: 'Space Mono', monospace; font-size: 0.65rem;
+      color: var(--steel); margin-bottom: 0.5rem; letter-spacing: 0.1em;
+    }
+    .control-val { color: var(--paper); }
+    
+    /* Range Slider */
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; background: transparent;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%;
+      background: var(--ember); cursor: pointer; margin-top: -5px;
+      box-shadow: 0 0 10px var(--ember);
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%; height: 2px; cursor: pointer; background: var(--line);
+    }
+
+    /* Overlay Info */
+    #game-info {
+      position: absolute; bottom: 2rem; left: 2.5rem; pointer-events: none;
+      font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--steel);
+      letter-spacing: 0.1em; text-transform: uppercase; z-index: 10;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .control-panel {
+        right: 5%; left: 5%; bottom: 2rem; top: auto; transform: none; width: 90%; padding: 1rem;
+      }
+      #game-info { top: 6rem; bottom: auto; }
+    }
+  </style>
+  <link rel="stylesheet" href="mobile.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav id="navbar">
+    <a href="index.html" class="nav-logo">
+      <svg class="logo-mark" viewBox="0 0 100 100" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,15 90,90 70,90 50,55 30,90 10,90" fill="none" stroke="#90f058" stroke-width="4" stroke-linejoin="miter" />
+        <text x="50" y="74" font-family="'Inter', sans-serif" font-weight="900" font-size="36" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" letter-spacing="-2">AW</text>
+      </svg>
+      <span class="logo-abd">ABD</span>
+      <span class="logo-dev">DEVELOPER</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">[ Home ]</a></li>
+      <li><a href="lab.html">[ Lab 01 ]</a></li>
+      <li><a href="lab2.html">[ Lab 02 ]</a></li>
+      <li><a href="lab3.html">[ Lab 03 ]</a></li>
+      <li><a href="lab4.html" style="color:var(--glass);">[ Lab 04: Cosmic ]</a></li>
+      <li><button id="sound-toggle" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;">[ Sound: Off ]</button></li>
+    </ul>
+  </nav>
+
+  <!-- Canvas -->
+  <canvas id="cosmic-canvas"></canvas>
+  <div id="game-info">SOLAR SYSTEM // Orbit, Zoom, and Pan with Mouse.</div>
+
+  <!-- UI Control Panel -->
+  <div class="control-panel">
+    <div class="panel-header">/// COSMIC SIMULATOR</div>
+    
+    <div class="tabs">
+      <button class="tab-btn active" data-target="solar">Solar</button>
+      <button class="tab-btn" data-target="milky">Milky Way</button>
+      <button class="tab-btn" data-target="nebula">Nebula</button>
+    </div>
+
+    <!-- Solar Controls -->
+    <div class="control-group active" id="ctrl-solar">
+      <div class="control-label"><span>Time Scale</span> <span class="control-val" id="val-so-time">1.0</span></div>
+      <input type="range" id="inp-so-time" min="0.1" max="5.0" step="0.1" value="1.0">
+      
+      <div class="control-label" style="margin-top:1rem;"><span>Star Intensity</span> <span class="control-val" id="val-so-star">2.0</span></div>
+      <input type="range" id="inp-so-star" min="0.5" max="5.0" step="0.1" value="2.0">
+    </div>
+
+    <!-- Milky Way Controls -->
+    <div class="control-group" id="ctrl-milky">
+      <div class="control-label"><span>Star Count</span> <span class="control-val" id="val-mw-count">50000</span></div>
+      <input type="range" id="inp-mw-count" min="10000" max="150000" step="10000" value="50000">
+      
+      <div class="control-label" style="margin-top:1rem;"><span>Spin Rate</span> <span class="control-val" id="val-mw-spin">0.05</span></div>
+      <input type="range" id="inp-mw-spin" min="0.01" max="0.5" step="0.01" value="0.05">
+
+      <div class="control-label" style="margin-top:1rem;"><span>Arm Spread</span> <span class="control-val" id="val-mw-arm">1.5</span></div>
+      <input type="range" id="inp-mw-arm" min="0.5" max="3.0" step="0.1" value="1.5">
+    </div>
+
+    <!-- Nebula Controls -->
+    <div class="control-group" id="ctrl-nebula">
+      <div class="control-label"><span>Cloud Density</span> <span class="control-val" id="val-nb-den">2000</span></div>
+      <input type="range" id="inp-nb-den" min="500" max="5000" step="100" value="2000">
+      
+      <div class="control-label" style="margin-top:1rem;"><span>Rotation Speed</span> <span class="control-val" id="val-nb-rot">0.1</span></div>
+      <input type="range" id="inp-nb-rot" min="0.01" max="0.5" step="0.01" value="0.1">
+    </div>
+  </div>
+
+  <script>
+    // ══════════════════════════════════════════
+    //  UI LOGIC
+    // ══════════════════════════════════════════
+    let currentScene = 'solar';
+    const infoText = document.getElementById('game-info');
+    const infoMap = {
+      'solar': 'SOLAR SYSTEM // Orbit, Zoom, and Pan with Mouse.',
+      'milky': 'MILKY WAY GALAXY // Drag to explore the spiral arms.',
+      'nebula': 'NEBULA CLOUD // Volumetric cosmic dust.'
+    };
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.control-group').forEach(g => g.classList.remove('active'));
+        
+        btn.classList.add('active');
+        const target = btn.getAttribute('data-target');
+        document.getElementById('ctrl-' + target).classList.add('active');
+        currentScene = target;
+        infoText.innerText = infoMap[target];
+        
+        loadScene(target);
+      });
+    });
+
+    function syncSlider(id, format = (v) => v) {
+      const inp = document.getElementById('inp-' + id);
+      const val = document.getElementById('val-' + id);
+      inp.addEventListener('input', () => {
+        val.innerText = format(inp.value);
+        updateParams();
+      });
+      // Fire for Milky Way regeneration
+      if(id === 'mw-count' || id === 'mw-arm' || id === 'nb-den') {
+        inp.addEventListener('change', () => { loadScene(currentScene); });
+      }
+    }
+    
+    syncSlider('so-time', v => Number(v).toFixed(1)); syncSlider('so-star', v => Number(v).toFixed(1));
+    syncSlider('mw-count'); syncSlider('mw-spin', v => Number(v).toFixed(2)); syncSlider('mw-arm', v => Number(v).toFixed(1));
+    syncSlider('nb-den'); syncSlider('nb-rot', v => Number(v).toFixed(2));
+
+    const params = {
+      solar: { time: 1.0, star: 2.0 },
+      milky: { count: 50000, spin: 0.05, arm: 1.5 },
+      nebula: { den: 2000, rot: 0.1 }
+    };
+
+    function updateParams() {
+      params.solar.time = parseFloat(document.getElementById('inp-so-time').value);
+      params.solar.star = parseFloat(document.getElementById('inp-so-star').value);
+      
+      params.milky.count = parseInt(document.getElementById('inp-mw-count').value);
+      params.milky.spin = parseFloat(document.getElementById('inp-mw-spin').value);
+      params.milky.arm = parseFloat(document.getElementById('inp-mw-arm').value);
+      
+      params.nebula.den = parseInt(document.getElementById('inp-nb-den').value);
+      params.nebula.rot = parseFloat(document.getElementById('inp-nb-rot').value);
+
+      if(currentScene === 'solar' && sunLight) {
+        sunLight.intensity = params.solar.star;
+        sunMat.emissiveIntensity = params.solar.star;
+      }
+    }
+
+    // ══════════════════════════════════════════
+    //  THREE.JS ENGINE
+    // ══════════════════════════════════════════
+    const canvas = document.getElementById('cosmic-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    let currentGroup = new THREE.Group();
+    scene.add(currentGroup);
+
+    let clock = new THREE.Clock();
+
+    // --- SCENE 1: SOLAR SYSTEM ---
+    let planets = [];
+    let sunLight, sunMat;
+    
+    function buildSolarSystem() {
+      camera.position.set(0, 150, 250);
+      controls.target.set(0,0,0);
+      
+      // Sun
+      const sunGeo = new THREE.SphereGeometry(25, 32, 32);
+      sunMat = new THREE.MeshStandardMaterial({
+        color: 0xffdd88,
+        emissive: 0xffaa00,
+        emissiveIntensity: params.solar.star * 2,
+        wireframe: false
+      });
+      const sun = new THREE.Mesh(sunGeo, sunMat);
+      currentGroup.add(sun);
+
+      sunLight = new THREE.PointLight(0xffeedd, params.solar.star * 3, 1000);
+      currentGroup.add(sunLight);
+      currentGroup.add(new THREE.AmbientLight(0x444444));
+
+      // Planets Data
+      const pData = [
+        { r: 4, dist: 40, speed: 0.02, color: 0xa8a8a8 }, // Mercury
+        { r: 7, dist: 65, speed: 0.015, color: 0xffcc99 }, // Venus
+        { r: 8, dist: 95, speed: 0.01, color: 0x44aaff }, // Earth
+        { r: 6, dist: 130, speed: 0.008, color: 0xff5522 }, // Mars
+        { r: 16, dist: 200, speed: 0.005, color: 0xffaa55 }, // Jupiter
+        { r: 14, dist: 270, speed: 0.003, color: 0xeeddaa }  // Saturn
+      ];
+
+      planets = [];
+      pData.forEach(d => {
+        const mat = new THREE.MeshStandardMaterial({ color: d.color, roughness: 0.5 });
+        const mesh = new THREE.Mesh(new THREE.SphereGeometry(d.r, 32, 32), mat);
+        
+        // Orbit ring
+        const ringGeo = new THREE.RingGeometry(d.dist - 0.5, d.dist + 0.5, 128);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3, side: THREE.DoubleSide });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI / 2;
+        currentGroup.add(ring);
+
+        currentGroup.add(mesh);
+        planets.push({ mesh, dist: d.dist, speed: d.speed, angle: Math.random() * Math.PI * 2 });
+      });
+    }
+
+    // Create a soft, glowing particle texture
+    function createSoftParticle() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 32;
+      canvas.height = 32;
+      const ctx = canvas.getContext('2d');
+      const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+      gradient.addColorStop(0, 'rgba(255,255,255,1)');
+      gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
+      gradient.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+      gradient.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 32, 32);
+      return new THREE.CanvasTexture(canvas);
+    }
+    const particleTex = createSoftParticle();
+
+    // --- SCENE 2: MILKY WAY ---
+    let galaxySystem;
+    function buildMilkyWay() {
+      camera.position.set(0, 150, 350);
+      controls.target.set(0,0,0);
+
+      const count = params.milky.count;
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+
+      const colorInside = new THREE.Color(0xffddaa); // Core color
+      const colorOutside = new THREE.Color(0x3388ff); // Arm color
+
+      for(let i = 0; i < count; i++) {
+        // Realistic Spiral logic with power function for dense core
+        const rPow = Math.pow(Math.random(), 3);
+        const radius = rPow * 300; 
+        const spinAngle = radius * params.milky.arm * 0.05;
+        const branchAngle = (i % 4) * ((Math.PI * 2) / 4); // 4 arms
+        
+        // Scatter depends on radius (tighter at center, spread at edges)
+        const spread = 30 * (1.1 - rPow);
+        const randomX = (Math.random() - 0.5) * spread;
+        const randomY = (Math.random() - 0.5) * (spread / 2); // flatter disk
+        const randomZ = (Math.random() - 0.5) * spread;
+
+        positions[i*3] = Math.cos(branchAngle + spinAngle) * radius + randomX;
+        positions[i*3+1] = randomY;
+        positions[i*3+2] = Math.sin(branchAngle + spinAngle) * radius + randomZ;
+
+        // Color mix
+        const mixedColor = colorInside.clone();
+        mixedColor.lerp(colorOutside, rPow);
+        
+        colors[i*3] = mixedColor.r;
+        colors[i*3+1] = mixedColor.g;
+        colors[i*3+2] = mixedColor.b;
+      }
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const mat = new THREE.PointsMaterial({
+        size: 4.0,
+        sizeAttenuation: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        vertexColors: true,
+        map: particleTex,
+        transparent: true
+      });
+
+      galaxySystem = new THREE.Points(geo, mat);
+      currentGroup.add(galaxySystem);
+    }
+
+    // --- SCENE 3: NEBULA CLOUD ---
+    let nebulaSystem;
+    function buildNebula() {
+      camera.position.set(0, 0, 400);
+      controls.target.set(0,0,0);
+
+      const count = params.nebula.den * 2; // Increase density for soft clouds
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+
+      const c1 = new THREE.Color(0xff44aa); // Pink/Purple
+      const c2 = new THREE.Color(0x2288ff); // Deep Blue
+      const c3 = new THREE.Color(0x00ffff); // Cyan
+
+      // Generate random centers to clump the nebula
+      const centers = [];
+      for(let k=0; k<6; k++) {
+        centers.push({
+          x: (Math.random()-0.5)*200,
+          y: (Math.random()-0.5)*150,
+          z: (Math.random()-0.5)*200
+        });
+      }
+
+      for(let i = 0; i < count; i++) {
+        const center = centers[Math.floor(Math.random() * centers.length)];
+        
+        // Power distribution to clump near center
+        const r = Math.pow(Math.random(), 1.5) * 150;
+        const u = Math.random();
+        const v = Math.random();
+        const theta = u * 2.0 * Math.PI;
+        const phi = Math.acos(2.0 * v - 1.0);
+
+        positions[i*3] = center.x + r * Math.sin(phi) * Math.cos(theta);
+        positions[i*3+1] = center.y + r * Math.sin(phi) * Math.sin(theta);
+        positions[i*3+2] = center.z + r * Math.cos(phi);
+
+        // Color based on height and random choice
+        let col = (positions[i*3+1] > 0) ? c1 : c2;
+        if(Math.random() > 0.8) col = c3;
+
+        colors[i*3] = col.r;
+        colors[i*3+1] = col.g;
+        colors[i*3+2] = col.b;
+      }
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const mat = new THREE.PointsMaterial({
+        size: 60,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.08,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        vertexColors: true,
+        map: particleTex
+      });
+
+      nebulaSystem = new THREE.Points(geo, mat);
+      currentGroup.add(nebulaSystem);
+    }
+
+    function loadScene(target) {
+      scene.remove(currentGroup);
+      currentGroup = new THREE.Group();
+      scene.add(currentGroup);
+      
+      updateParams();
+
+      if(target === 'solar') buildSolarSystem();
+      if(target === 'milky') buildMilkyWay();
+      if(target === 'nebula') buildNebula();
+    }
+
+    // ══════════════════════════════════════════
+    //  RENDER LOOP
+    // ══════════════════════════════════════════
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      let dt = clock.getDelta();
+
+      if(currentScene === 'solar') {
+        planets.forEach(p => {
+          p.angle += p.speed * params.solar.time;
+          p.mesh.position.x = Math.cos(p.angle) * p.dist;
+          p.mesh.position.z = Math.sin(p.angle) * p.dist;
+          p.mesh.rotation.y += 0.01;
+        });
+      }
+
+      if(currentScene === 'milky' && galaxySystem) {
+        galaxySystem.rotation.y += params.milky.spin * dt;
+      }
+
+      if(currentScene === 'nebula' && nebulaSystem) {
+        nebulaSystem.rotation.x += params.nebula.rot * 0.5 * dt;
+        nebulaSystem.rotation.y += params.nebula.rot * dt;
+      }
+
+      renderer.render(scene, camera);
+    }
+    
+    updateParams();
+    loadScene('solar');
+    animate();
+  </script>
+  <script src="global.js"></script>
+  <div class="page-transition-shutter"></div>
+</body>
+</html>

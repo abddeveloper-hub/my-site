@@ -46,3 +46,28 @@
 @media (max-width: 640px) { 
   .contact-main { padding: 3rem 1.5rem !important; } 
 }
+
+/* --- Global Cinematic Shutter --- */
+.page-transition-shutter {
+  position: fixed; inset: 0; z-index: 99999;
+  background: var(--obsidian, #0B0D12);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.page-transition-shutter.hidden {
+  opacity: 0;
+}
+.page-transition-shutter.active {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+/* --- Sound Toggle --- */
+#sound-toggle {
+  font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.2em; color: var(--steel); text-decoration: none; transition: color 0.3s;
+  cursor: pointer;
+  background: none; border: none; padding: 0;
+}
+#sound-toggle:hover { color: var(--ember); }

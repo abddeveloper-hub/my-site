@@ -148,10 +148,14 @@
       </a>
       <ul class="nav-links">
         <li><a href="index.html">[ Home ]</a></li>
-        <li><a href="about.html">[ About ]</a></li>
-        <li><a href="work.html" class="active">[ Work ]</a></li>
-        <li><a href="lab.html" style="color:var(--glass);">[ The Lab ]</a></li>
-        <li><a href="contact.html">[ Contact ]</a></li>
+        <li><a href="index.html">[ Home ]</a></li>
+      <li><a href="work.html" style="color:var(--glass);">[ Work ]</a></li>
+      <li><a href="lab.html">[ Lab 01 ]</a></li>
+      <li><a href="lab2.html">[ Lab 02 ]</a></li>
+      <li><a href="lab3.html">[ Lab 03: Engine ]</a></li>
+      <li><a href="lab4.html">[ Lab 04: Cosmic ]</a></li>
+      <li><a href="contact.html">[ Contact ]</a></li>
+        <li><button id="sound-toggle">[ Sound: Off ]</button></li>
       </ul>
       <a href="contact.html" class="nav-mobile">[ Menu ]</a>
     </nav>
@@ -226,13 +230,7 @@
   </footer>
 
   <script>
-    const nb = document.getElementById('navbar');
-    window.addEventListener('scroll', () => nb.classList.toggle('scrolled', scrollY > 40), { passive: true });
-    const prog = document.getElementById('scroll-prog');
-    window.addEventListener('scroll', () => { prog.style.width = (scrollY / (document.body.scrollHeight - innerHeight) * 100) + '%'; }, { passive: true });
-    const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);} }), { threshold: 0.15 });
-    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
-    // 3D Tilt
+    // 3D Tilt (Page-specific logic)
     document.querySelectorAll('.tilt-card').forEach(card => {
       card.addEventListener('mousemove', e => {
         const r = card.getBoundingClientRect();
@@ -242,11 +240,9 @@
       });
       card.addEventListener('mouseleave', () => { card.style.transform = ''; });
     });
-    // Cursor
-    const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring');
-    let cx=-200,cy=-200,rx=-200,ry=-200;
-    document.addEventListener('mousemove', e => { cx=e.clientX; cy=e.clientY; });
-    (function loop(){ requestAnimationFrame(loop); rx+=(cx-rx)*0.12; ry+=(cy-ry)*0.12; dot.style.left=cx+'px'; dot.style.top=cy+'px'; ring.style.left=rx+'px'; ring.style.top=ry+'px'; })();
+    // Shared interaction logic has been migrated to global.js
   </script>
+  <script src="global.js"></script>
+  <div class="page-transition-shutter"></div>
 </body>
 </html>

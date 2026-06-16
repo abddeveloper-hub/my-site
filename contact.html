@@ -147,8 +147,11 @@
         <li><a href="index.html">[ Home ]</a></li>
         <li><a href="about.html">[ About ]</a></li>
         <li><a href="work.html">[ Work ]</a></li>
-        <li><a href="lab.html" style="color:var(--glass);">[ The Lab ]</a></li>
+        <li><a href="lab.html">[ Lab 01 ]</a></li>
+        <li><a href="lab2.html">[ Lab 02 ]</a></li>
+        <li><a href="lab3.html">[ Lab 03: Engine ]</a></li>
         <li><a href="contact.html" class="active">[ Contact ]</a></li>
+        <li><button id="sound-toggle">[ Sound: Off ]</button></li>
       </ul>
       <a href="contact.html" class="nav-mobile">[ Menu ]</a>
     </nav>
@@ -235,5 +238,7 @@
     document.addEventListener('mousemove',e=>{cx=e.clientX;cy=e.clientY;});
     (function loop(){requestAnimationFrame(loop);rx+=(cx-rx)*0.12;ry+=(cy-ry)*0.12;dot.style.left=cx+'px';dot.style.top=cy+'px';ring.style.left=rx+'px';ring.style.top=ry+'px';})();
   </script>
+  <script src="global.js"></script>
+  <div class="page-transition-shutter"></div>
 </body>
 </html>

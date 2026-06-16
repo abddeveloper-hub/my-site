@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lab 03: Game Engine | Premium Engineering</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* ══ THEME TOKENS ══ */
+    :root {
+      --obsidian: #050608;
+      --ember: #ff6b3d;
+      --glass: #6fe3d9;
+      --steel: #8a93a6;
+      --paper: #f3f1ec;
+      --line: #1a1e28;
+      --panel-bg: rgba(10, 12, 16, 0.85);
+      --panel-border: rgba(111, 227, 217, 0.2);
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--obsidian); color: var(--paper);
+      font-family: 'Inter', sans-serif;
+      overflow: hidden; 
+      background-color: #000;
+    }
+
+    /* ── Navbar ── */
+    nav {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 1000;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.5rem 2.5rem; mix-blend-mode: difference;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.6rem;
+      text-decoration: none; position: relative;
+    }
+    .logo-mark { transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
+    .nav-logo:hover .logo-mark { transform: scale(1.1); }
+    .logo-abd { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 1.1rem; letter-spacing: 0.1em; color: var(--paper); }
+    .logo-dev { font-family: 'Inter', sans-serif; font-weight: 300; font-size: 1.1rem; letter-spacing: 0.1em; color: var(--paper); margin-left: -0.2rem; }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 0.2em; color: var(--paper); text-decoration: none; transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--ember); }
+
+    /* ══ GAME CANVAS ══ */
+    #game-canvas {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: 0; cursor: crosshair;
+    }
+
+    /* ══ CONTROL PANEL ══ */
+    .control-panel {
+      position: absolute; right: 2rem; top: 50%; transform: translateY(-50%);
+      width: 320px; background: var(--panel-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border); border-radius: 8px;
+      padding: 1.5rem; z-index: 100;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    
+    .panel-header {
+      font-family: 'Space Mono', monospace; font-size: 0.8rem;
+      color: var(--glass); letter-spacing: 0.2em; text-transform: uppercase;
+      margin-bottom: 1.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.5rem;
+    }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .tab-btn {
+      flex: 1; background: transparent; border: 1px solid var(--line);
+      color: var(--steel); padding: 0.5rem 0; font-family: 'Space Mono', monospace;
+      font-size: 0.6rem; cursor: pointer; transition: all 0.3s;
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background: rgba(255,255,255,0.05); color: var(--paper); border-color: var(--glass);
+    }
+
+    /* Controls */
+    .control-group { margin-bottom: 1.2rem; display: none; }
+    .control-group.active { display: block; }
+    .control-label {
+      display: flex; justify-content: space-between;
+      font-family: 'Space Mono', monospace; font-size: 0.65rem;
+      color: var(--steel); margin-bottom: 0.5rem; letter-spacing: 0.1em;
+    }
+    .control-val { color: var(--paper); }
+    
+    /* Range Slider */
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; background: transparent;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%;
+      background: var(--ember); cursor: pointer; margin-top: -5px;
+      box-shadow: 0 0 10px var(--ember);
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%; height: 2px; cursor: pointer; background: var(--line);
+    }
+
+    /* Buttons */
+    .action-btn {
+      width: 100%; background: transparent; border: 1px solid var(--ember);
+      color: var(--ember); padding: 0.8rem; font-family: 'Space Mono', monospace;
+      font-size: 0.7rem; letter-spacing: 0.2em; cursor: pointer;
+      text-transform: uppercase; transition: all 0.3s; margin-top: 1rem;
+    }
+    .action-btn:hover { background: var(--ember); color: #000; }
+
+    /* Overlay Info */
+    #game-info {
+      position: absolute; bottom: 2rem; left: 2.5rem; pointer-events: none;
+      font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--steel);
+      letter-spacing: 0.1em; text-transform: uppercase; z-index: 10;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .control-panel {
+        right: 5%; left: 5%; bottom: 2rem; top: auto; transform: none; width: 90%; padding: 1rem;
+      }
+      #game-info { top: 6rem; bottom: auto; }
+    }
+  </style>
+  <link rel="stylesheet" href="mobile.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav id="navbar">
+    <a href="index.html" class="nav-logo">
+      <svg class="logo-mark" viewBox="0 0 100 100" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,15 90,90 70,90 50,55 30,90 10,90" fill="none" stroke="#90f058" stroke-width="4" stroke-linejoin="miter" />
+        <text x="50" y="74" font-family="'Inter', sans-serif" font-weight="900" font-size="36" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" letter-spacing="-2">AW</text>
+      </svg>
+      <span class="logo-abd">ABD</span>
+      <span class="logo-dev">DEVELOPER</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">[ Home ]</a></li>
+      <li><a href="lab.html">[ Lab 01 ]</a></li>
+      <li><a href="lab2.html">[ Lab 02 ]</a></li>
+      <li><a href="lab3.html" style="color:var(--glass);">[ Lab 03: Engine ]</a></li>
+      <li><a href="lab4.html">[ Lab 04: Cosmic ]</a></li>
+      <li><button id="sound-toggle" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;">[ Sound: Off ]</button></li>
+    </ul>
+  </nav>
+
+  <!-- Game Canvas -->
+  <canvas id="game-canvas"></canvas>
+  <div id="game-info">PONG // Move mouse to control paddle.</div>
+
+  <!-- UI Control Panel -->
+  <div class="control-panel">
+    <div class="panel-header">/// GAME MODIFIER</div>
+    
+    <div class="tabs">
+      <button class="tab-btn active" data-target="pong">Pong</button>
+      <button class="tab-btn" data-target="shooter">Shooter</button>
+      <button class="tab-btn" data-target="gravity">Gravity</button>
+      <button class="tab-btn" data-target="snake">Snake</button>
+      <button class="tab-btn" data-target="breakout">Breakout</button>
+    </div>
+
+    <!-- Pong Controls -->
+    <div class="control-group active" id="ctrl-pong">
+      <div class="control-label"><span>Ball Speed</span> <span class="control-val" id="val-p-speed">8</span></div>
+      <input type="range" id="inp-p-speed" min="2" max="25" step="1" value="8">
+      
+      <div class="control-label" style="margin-top:1rem;"><span>AI Intelligence</span> <span class="control-val" id="val-p-ai">0.1</span></div>
+      <input type="range" id="inp-p-ai" min="0.01" max="0.5" step="0.01" value="0.1">
+
+      <div class="control-label" style="margin-top:1rem;"><span>Paddle Size</span> <span class="control-val" id="val-p-pad">100</span></div>
+      <input type="range" id="inp-p-pad" min="30" max="300" step="10" value="100">
+    </div>
+
+    <!-- Shooter Controls -->
+    <div class="control-group" id="ctrl-shooter">
+      <div class="control-label"><span>Spawn Rate</span> <span class="control-val" id="val-s-spawn">60</span></div>
+      <input type="range" id="inp-s-spawn" min="10" max="150" step="5" value="60">
+      
+      <div class="control-label" style="margin-top:1rem;"><span>Fire Rate</span> <span class="control-val" id="val-s-fire">15</span></div>
+      <input type="range" id="inp-s-fire" min="2" max="30" step="1" value="15">
+
+      <div class="control-label" style="margin-top:1rem;"><span>Explosion Force</span> <span class="control-val" id="val-s-force">5</span></div>
+      <input type="range" id="inp-s-force" min="2" max="20" step="1" value="5">
+    </div>
+
+    <!-- Gravity Controls -->
+    <div class="control-group" id="ctrl-gravity">
+      <div class="control-label"><span>Gravity Strength</span> <span class="control-val" id="val-g-str">500</span></div>
+      <input type="range" id="inp-g-str" min="50" max="2000" step="50" value="500">
+      
+      <div class="control-label" style="margin-top:1rem;"><span>Friction</span> <span class="control-val" id="val-g-fric">0.99</span></div>
+      <input type="range" id="inp-g-fric" min="0.8" max="1.0" step="0.01" value="0.99">
+
+      <div class="control-label" style="margin-top:1rem;"><span>Particle Speed</span> <span class="control-val" id="val-g-spd">4</span></div>
+      <input type="range" id="inp-g-spd" min="1" max="10" step="0.5" value="4">
+      
+      <button class="action-btn" id="btn-g-clear">Clear Nodes</button>
+    </div>
+
+    <!-- Snake Controls -->
+    <div class="control-group" id="ctrl-snake">
+      <div class="control-label"><span>Speed</span> <span class="control-val" id="val-sn-spd">10</span></div>
+      <input type="range" id="inp-sn-spd" min="2" max="30" step="1" value="10">
+      
+      <div class="control-label" style="margin-top:1rem;"><span>Grid Size</span> <span class="control-val" id="val-sn-grid">20</span></div>
+      <input type="range" id="inp-sn-grid" min="10" max="50" step="5" value="20">
+    </div>
+
+    <!-- Breakout Controls -->
+    <div class="control-group" id="ctrl-breakout">
+      <div class="control-label"><span>Ball Speed</span> <span class="control-val" id="val-br-spd">6</span></div>
+      <input type="range" id="inp-br-spd" min="3" max="20" step="1" value="6">
+      
+      <div class="control-label" style="margin-top:1rem;"><span>Paddle Width</span> <span class="control-val" id="val-br-pad">150</span></div>
+      <input type="range" id="inp-br-pad" min="50" max="400" step="10" value="150">
+    </div>
+  </div>
+
+  <script>
+    // ══════════════════════════════════════════
+    //  UI LOGIC
+    // ══════════════════════════════════════════
+    let currentGame = 'pong';
+    const infoText = document.getElementById('game-info');
+    const infoMap = {
+      'pong': 'CYBER-PONG // Move mouse to control left paddle.',
+      'shooter': 'ASTEROID GEOMETRY // Move mouse to aim. Click/Hold to shoot.',
+      'gravity': 'GRAVITY NODE // Click to place gravity wells. Guide the particles.',
+      'snake': 'NEON SNAKE // Use Arrow Keys or WASD to move.',
+      'breakout': 'CYBER-BREAKOUT // Move mouse to control paddle.'
+    };
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.control-group').forEach(g => g.classList.remove('active'));
+        
+        btn.classList.add('active');
+        const target = btn.getAttribute('data-target');
+        document.getElementById('ctrl-' + target).classList.add('active');
+        currentGame = target;
+        infoText.innerText = infoMap[target];
+        
+        resetGame(target);
+      });
+    });
+
+    function syncSlider(id, format = (v) => v) {
+      const inp = document.getElementById('inp-' + id);
+      const val = document.getElementById('val-' + id);
+      inp.addEventListener('input', () => {
+        val.innerText = format(inp.value);
+        updateParams();
+      });
+    }
+    
+    syncSlider('p-speed'); syncSlider('p-ai', v => Number(v).toFixed(2)); syncSlider('p-pad');
+    syncSlider('s-spawn'); syncSlider('s-fire'); syncSlider('s-force');
+    syncSlider('g-str'); syncSlider('g-fric', v => Number(v).toFixed(2)); syncSlider('g-spd', v => Number(v).toFixed(1));
+    syncSlider('sn-spd'); syncSlider('sn-grid');
+    syncSlider('br-spd'); syncSlider('br-pad');
+
+    const params = {
+      pong: { speed: 8, ai: 0.1, pad: 100 },
+      shooter: { spawn: 60, fire: 15, force: 5 },
+      gravity: { str: 500, fric: 0.99, spd: 4 },
+      snake: { spd: 10, grid: 20 },
+      breakout: { spd: 6, pad: 150 }
+    };
+
+    function updateParams() {
+      params.pong.speed = parseInt(document.getElementById('inp-p-speed').value);
+      params.pong.ai = parseFloat(document.getElementById('inp-p-ai').value);
+      params.pong.pad = parseInt(document.getElementById('inp-p-pad').value);
+      
+      params.shooter.spawn = parseInt(document.getElementById('inp-s-spawn').value);
+      params.shooter.fire = parseInt(document.getElementById('inp-s-fire').value);
+      params.shooter.force = parseInt(document.getElementById('inp-s-force').value);
+      
+      params.gravity.str = parseInt(document.getElementById('inp-g-str').value);
+      params.gravity.fric = parseFloat(document.getElementById('inp-g-fric').value);
+      params.gravity.spd = parseFloat(document.getElementById('inp-g-spd').value);
+
+      params.snake.spd = parseInt(document.getElementById('inp-sn-spd').value);
+      params.snake.grid = parseInt(document.getElementById('inp-sn-grid').value);
+
+      params.breakout.spd = parseInt(document.getElementById('inp-br-spd').value);
+      params.breakout.pad = parseInt(document.getElementById('inp-br-pad').value);
+    }
+
+    // ══════════════════════════════════════════
+    //  CANVAS ENGINE
+    // ══════════════════════════════════════════
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    let W = canvas.width = window.innerWidth;
+    let H = canvas.height = window.innerHeight;
+
+    let mouseX = W/2, mouseY = H/2, isMouseDown = false;
+    window.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+    window.addEventListener('mousedown', () => isMouseDown = true);
+    window.addEventListener('mouseup', () => isMouseDown = false);
+    window.addEventListener('resize', () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; });
+
+    // Neon Glow Helper
+    function drawNeon(func, color, blur = 15) {
+      ctx.shadowBlur = blur;
+      ctx.shadowColor = color;
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      func();
+      ctx.shadowBlur = 0;
+    }
+
+    // --- GAME 1: PONG ---
+    let pBall = { x: W/2, y: H/2, vx: 5, vy: 5, r: 8 };
+    let pPadL = { y: H/2 };
+    let pPadR = { y: H/2 };
+    let pScore = [0, 0];
+
+    // --- GAME 2: SHOOTER ---
+    let shPlayer = { x: W/2, y: H - 50 };
+    let shLasers = [];
+    let shEnemies = [];
+    let shParticles = [];
+    let shFrame = 0;
+
+    // --- GAME 3: GRAVITY ---
+    let grNodes = [];
+    let grParticles = [];
+    let grFrame = 0;
+
+    document.getElementById('btn-g-clear').addEventListener('click', () => grNodes = []);
+    window.addEventListener('mousedown', () => {
+      if(currentGame === 'gravity') {
+        grNodes.push({ x: mouseX, y: mouseY });
+      }
+    });
+
+    // --- GAME 4: SNAKE ---
+    let snTail = [];
+    let snLen = 5;
+    let snPos = { x: 10, y: 10 };
+    let snDir = { x: 1, y: 0 };
+    let snFood = { x: 15, y: 15 };
+    let snFrame = 0;
+    window.addEventListener('keydown', e => {
+      if(currentGame !== 'snake') return;
+      if((e.key === 'ArrowUp' || e.key === 'w') && snDir.y === 0) snDir = {x:0, y:-1};
+      if((e.key === 'ArrowDown' || e.key === 's') && snDir.y === 0) snDir = {x:0, y:1};
+      if((e.key === 'ArrowLeft' || e.key === 'a') && snDir.x === 0) snDir = {x:-1, y:0};
+      if((e.key === 'ArrowRight' || e.key === 'd') && snDir.x === 0) snDir = {x:1, y:0};
+    });
+
+    // --- GAME 5: BREAKOUT ---
+    let brBall = { x: W/2, y: H/2, vx: 5, vy: 5, r: 8 };
+    let brPad = { x: W/2 };
+    let brBlocks = [];
+    function initBreakout() {
+      brBlocks = [];
+      let cols = Math.floor(W / 120);
+      let rows = 5;
+      let xOffset = (W - (cols * 120)) / 2;
+      for(let r=0; r<rows; r++) {
+        for(let c=0; c<cols; c++) {
+          brBlocks.push({ x: xOffset + c*120 + 10, y: 50 + r*40, w: 100, h: 20, active: true });
+        }
+      }
+      brBall.x = W/2; brBall.y = H/2 + 100;
+    }
+    initBreakout();
+
+    function resetGame(target) {
+      ctx.clearRect(0, 0, W, H);
+      if(target === 'pong') { pBall.x = W/2; pBall.y = H/2; pScore = [0,0]; }
+      if(target === 'shooter') { shLasers = []; shEnemies = []; shParticles = []; }
+      if(target === 'gravity') { grNodes = []; grParticles = []; }
+      if(target === 'snake') { snPos = {x:10, y:10}; snTail = []; snLen = 5; snDir = {x:1, y:0}; }
+      if(target === 'breakout') { initBreakout(); }
+    }
+
+    function renderPong() {
+      // Draw Field
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(0,0,W,H);
+
+      // Move Paddles
+      pPadL.y = mouseY; // Player
+      pPadR.y += (pBall.y - pPadR.y) * params.pong.ai; // AI
+
+      // Constrain Paddles
+      pPadL.y = Math.max(params.pong.pad/2, Math.min(H - params.pong.pad/2, pPadL.y));
+      pPadR.y = Math.max(params.pong.pad/2, Math.min(H - params.pong.pad/2, pPadR.y));
+
+      // Move Ball (Normalize velocity to current speed setting)
+      let spd = Math.sqrt(pBall.vx*pBall.vx + pBall.vy*pBall.vy);
+      pBall.vx = (pBall.vx / spd) * params.pong.speed;
+      pBall.vy = (pBall.vy / spd) * params.pong.speed;
+
+      pBall.x += pBall.vx;
+      pBall.y += pBall.vy;
+
+      // Bounce Top/Bottom
+      if(pBall.y - pBall.r < 0 || pBall.y + pBall.r > H) pBall.vy *= -1;
+
+      // Paddle Collision L
+      if(pBall.x - pBall.r < 40 && pBall.y > pPadL.y - params.pong.pad/2 && pBall.y < pPadL.y + params.pong.pad/2) {
+        pBall.vx = Math.abs(pBall.vx);
+        pBall.vy += (pBall.y - pPadL.y) * 0.1;
+      }
+      // Paddle Collision R
+      if(pBall.x + pBall.r > W - 40 && pBall.y > pPadR.y - params.pong.pad/2 && pBall.y < pPadR.y + params.pong.pad/2) {
+        pBall.vx = -Math.abs(pBall.vx);
+        pBall.vy += (pBall.y - pPadR.y) * 0.1;
+      }
+
+      // Score
+      if(pBall.x < 0) { pScore[1]++; pBall.x = W/2; pBall.y = H/2; }
+      if(pBall.x > W) { pScore[0]++; pBall.x = W/2; pBall.y = H/2; }
+
+      // Draw Paddles
+      drawNeon(() => {
+        ctx.fillRect(20, pPadL.y - params.pong.pad/2, 20, params.pong.pad);
+      }, '#6fe3d9', 20);
+
+      drawNeon(() => {
+        ctx.fillRect(W - 40, pPadR.y - params.pong.pad/2, 20, params.pong.pad);
+      }, '#ff6b3d', 20);
+
+      // Draw Ball
+      drawNeon(() => {
+        ctx.beginPath(); ctx.arc(pBall.x, pBall.y, pBall.r, 0, Math.PI*2); ctx.fill();
+      }, '#ffffff', 15);
+
+      // Draw Score
+      ctx.fillStyle = '#1a1e28';
+      ctx.font = '100px "Space Mono"';
+      ctx.textAlign = 'center';
+      ctx.fillText(pScore[0] + '  ' + pScore[1], W/2, 100);
+    }
+
+    function renderShooter() {
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.fillRect(0,0,W,H);
+      shFrame++;
+
+      // Ship
+      shPlayer.x += (mouseX - shPlayer.x) * 0.2;
+      drawNeon(() => {
+        ctx.beginPath();
+        ctx.moveTo(shPlayer.x, shPlayer.y - 20);
+        ctx.lineTo(shPlayer.x - 15, shPlayer.y + 15);
+        ctx.lineTo(shPlayer.x + 15, shPlayer.y + 15);
+        ctx.closePath();
+        ctx.fill();
+      }, '#6fe3d9', 15);
+
+      // Shoot
+      if(isMouseDown && shFrame % params.shooter.fire === 0) {
+        shLasers.push({ x: shPlayer.x, y: shPlayer.y - 20, vy: -15 });
+      }
+
+      // Spawn Enemies
+      let spawnRate = Math.max(1, 160 - params.shooter.spawn);
+      if(shFrame % spawnRate === 0) {
+        shEnemies.push({ x: Math.random() * W, y: -50, vy: Math.random() * 2 + 1, r: Math.random() * 15 + 15 });
+      }
+
+      // Update Lasers
+      for(let i=shLasers.length-1; i>=0; i--) {
+        let l = shLasers[i];
+        l.y += l.vy;
+        drawNeon(() => { ctx.fillRect(l.x - 2, l.y, 4, 15); }, '#ff6b3d', 10);
+        if(l.y < -20) shLasers.splice(i, 1);
+      }
+
+      // Update Enemies
+      for(let i=shEnemies.length-1; i>=0; i--) {
+        let e = shEnemies[i];
+        e.y += e.vy;
+        drawNeon(() => {
+          ctx.beginPath();
+          ctx.rect(e.x - e.r, e.y - e.r, e.r*2, e.r*2);
+          ctx.stroke();
+          ctx.lineWidth = 2;
+        }, '#8a93a6', 10);
+
+        if(e.y > H + 50) shEnemies.splice(i, 1);
+      }
+
+      // Collisions
+      for(let i=shLasers.length-1; i>=0; i--) {
+        for(let j=shEnemies.length-1; j>=0; j--) {
+          let l = shLasers[i], e = shEnemies[j];
+          if(!l || !e) continue;
+          let dist = Math.hypot(l.x - e.x, l.y - e.y);
+          if(dist < e.r + 5) {
+            // Explode
+            for(let p=0; p<10; p++) {
+              let a = Math.random() * Math.PI*2;
+              let s = Math.random() * params.shooter.force;
+              shParticles.push({ x: e.x, y: e.y, vx: Math.cos(a)*s, vy: Math.sin(a)*s, life: 1 });
+            }
+            shLasers.splice(i, 1);
+            shEnemies.splice(j, 1);
+            break;
+          }
+        }
+      }
+
+      // Particles
+      for(let i=shParticles.length-1; i>=0; i--) {
+        let p = shParticles[i];
+        p.x += p.vx; p.y += p.vy;
+        p.life -= 0.02;
+        ctx.fillStyle = `rgba(255, 107, 61, ${p.life})`;
+        ctx.fillRect(p.x, p.y, 3, 3);
+        if(p.life <= 0) shParticles.splice(i, 1);
+      }
+    }
+
+    function renderGravity() {
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillRect(0,0,W,H);
+      grFrame++;
+
+      // Spawn particles
+      if(grFrame % 10 === 0) {
+        grParticles.push({ x: 0, y: H/2 + (Math.random()-0.5)*200, vx: params.gravity.spd, vy: 0, life: 500 });
+      }
+
+      // Draw Nodes
+      for(let n of grNodes) {
+        drawNeon(() => {
+          ctx.beginPath(); ctx.arc(n.x, n.y, 10, 0, Math.PI*2); ctx.fill();
+        }, '#ffffff', 20);
+      }
+
+      // Update Particles
+      for(let i=grParticles.length-1; i>=0; i--) {
+        let p = grParticles[i];
+        
+        for(let n of grNodes) {
+          let dx = n.x - p.x;
+          let dy = n.y - p.y;
+          let distSq = dx*dx + dy*dy;
+          if(distSq < 100) distSq = 100; // prevent singularity
+          let force = params.gravity.str / distSq;
+          let dist = Math.sqrt(distSq);
+          p.vx += (dx/dist) * force;
+          p.vy += (dy/dist) * force;
+        }
+
+        p.vx *= params.gravity.fric;
+        p.vy *= params.gravity.fric;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+
+        drawNeon(() => {
+          ctx.fillStyle = '#6fe3d9';
+          ctx.fillRect(p.x, p.y, 2, 2);
+        }, '#6fe3d9', 5);
+
+        if(p.life <= 0 || p.x > W || p.y < 0 || p.y > H) grParticles.splice(i, 1);
+      }
+    }
+
+    function renderSnake() {
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(0,0,W,H);
+      snFrame++;
+
+      let tickRate = Math.max(1, 35 - params.snake.spd);
+      let gSize = params.snake.grid;
+      
+      if(snFrame % tickRate === 0) {
+        snPos.x += snDir.x;
+        snPos.y += snDir.y;
+        
+        let cols = Math.floor(W / gSize);
+        let rows = Math.floor(H / gSize);
+        if(snPos.x < 0) snPos.x = cols - 1;
+        if(snPos.x >= cols) snPos.x = 0;
+        if(snPos.y < 0) snPos.y = rows - 1;
+        if(snPos.y >= rows) snPos.y = 0;
+
+        // Death
+        for(let t of snTail) {
+          if(t.x === snPos.x && t.y === snPos.y) {
+            snLen = 5; snTail = [];
+          }
+        }
+
+        snTail.push({x: snPos.x, y: snPos.y});
+        while(snTail.length > snLen) snTail.shift();
+
+        // Eat
+        if(snPos.x === snFood.x && snPos.y === snFood.y) {
+          snLen += 2;
+          snFood = { x: Math.floor(Math.random()*cols), y: Math.floor(Math.random()*rows) };
+        }
+      }
+
+      drawNeon(() => {
+        for(let i=0; i<snTail.length; i++) {
+          ctx.fillStyle = i === snTail.length - 1 ? '#ffffff' : '#6fe3d9';
+          ctx.fillRect(snTail[i].x * gSize, snTail[i].y * gSize, gSize - 2, gSize - 2);
+        }
+      }, '#6fe3d9', 15);
+
+      drawNeon(() => {
+        ctx.fillStyle = '#ff6b3d';
+        ctx.fillRect(snFood.x * gSize, snFood.y * gSize, gSize - 2, gSize - 2);
+      }, '#ff6b3d', 15);
+    }
+
+    function renderBreakout() {
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(0,0,W,H);
+
+      brPad.x = mouseX;
+      brPad.x = Math.max(params.breakout.pad/2, Math.min(W - params.breakout.pad/2, brPad.x));
+
+      let spd = Math.sqrt(brBall.vx*brBall.vx + brBall.vy*brBall.vy);
+      brBall.vx = (brBall.vx / spd) * params.breakout.spd;
+      brBall.vy = (brBall.vy / spd) * params.breakout.spd;
+
+      brBall.x += brBall.vx;
+      brBall.y += brBall.vy;
+
+      // Walls
+      if(brBall.x - brBall.r < 0 || brBall.x + brBall.r > W) brBall.vx *= -1;
+      if(brBall.y - brBall.r < 0) brBall.vy *= -1;
+      
+      // Death
+      if(brBall.y > H) { brBall.x = W/2; brBall.y = H/2; brBall.vy = -Math.abs(brBall.vy); }
+
+      // Paddle Col
+      if(brBall.y + brBall.r > H - 50 && brBall.y < H - 30 && brBall.x > brPad.x - params.breakout.pad/2 && brBall.x < brPad.x + params.breakout.pad/2) {
+        brBall.vy = -Math.abs(brBall.vy);
+        brBall.vx += (brBall.x - brPad.x) * 0.1;
+      }
+
+      // Block Col
+      let activeBlocks = 0;
+      for(let b of brBlocks) {
+        if(b.active) {
+          activeBlocks++;
+          if(brBall.x > b.x && brBall.x < b.x + b.w && brBall.y - brBall.r < b.y + b.h && brBall.y + brBall.r > b.y) {
+            b.active = false;
+            brBall.vy *= -1;
+            break; // Only hit one block per frame
+          }
+        }
+      }
+
+      if(activeBlocks === 0) initBreakout(); // Win
+
+      // Draw Blocks
+      drawNeon(() => {
+        for(let b of brBlocks) {
+          if(b.active) {
+            ctx.strokeStyle = '#6fe3d9';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(b.x, b.y, b.w, b.h);
+          }
+        }
+      }, '#6fe3d9', 10);
+
+      // Draw Paddle
+      drawNeon(() => {
+        ctx.fillStyle = '#ff6b3d';
+        ctx.fillRect(brPad.x - params.breakout.pad/2, H - 50, params.breakout.pad, 15);
+      }, '#ff6b3d', 15);
+
+      // Draw Ball
+      drawNeon(() => {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(brBall.x, brBall.y, brBall.r, 0, Math.PI*2); ctx.fill();
+      }, '#ffffff', 15);
+    }
+
+    // ══════════════════════════════════════════
+    //  MAIN LOOP
+    // ══════════════════════════════════════════
+    function loop() {
+      requestAnimationFrame(loop);
+      if(currentGame === 'pong') renderPong();
+      else if(currentGame === 'shooter') renderShooter();
+      else if(currentGame === 'gravity') renderGravity();
+      else if(currentGame === 'snake') renderSnake();
+      else if(currentGame === 'breakout') renderBreakout();
+    }
+    
+    updateParams();
+    loop();
+  </script>
+  <script src="global.js"></script>
+  <div class="page-transition-shutter"></div>
+</body>
+</html>
