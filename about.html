@@ -11,6 +11,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,300&family=Inter:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap"
     rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -619,9 +620,173 @@
       color: var(--paper);
       text-decoration: none;
     }
-
     .footer-top:hover {
       color: var(--ember);
+    }
+
+    /* Sound Toggle */
+    .sound-toggle {
+      position: fixed;
+      bottom: 2.5rem;
+      right: 2.5rem;
+      z-index: 10000;
+      background: transparent;
+      border: 1px solid var(--steel);
+      color: var(--steel);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .sound-toggle:hover {
+      border-color: var(--ember);
+      color: var(--ember);
+    }
+
+    /* Cursor Spotlight Mode */
+    #cursor-ring.spotlight {
+      width: 80px !important;
+      height: 80px !important;
+      background: #ffffff;
+      border: none;
+      mix-blend-mode: difference;
+      opacity: 1 !important;
+    }
+    #cursor-dot.spotlight {
+      opacity: 0;
+    }
+
+    /* Scroll Velocity Glitch */
+    .glitch-wrapper {
+      transition: transform 0.1s ease-out;
+    }
+    .glitch-wrapper.glitch-active {
+      text-shadow: 3px 0 0 red, -3px 0 0 cyan;
+    }
+    
+    /* Text Scramble Data Attribute */
+    [data-scramble] {
+      visibility: hidden; /* Hide until initialized */
+    }
+    [data-scramble].scrambling {
+      visibility: visible;
+    }
+
+    /* WebGL Background Canvas */
+    #about-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    /* Infinite Marquee */
+    .marquee-container {
+      width: 100%;
+      overflow: hidden;
+      background: var(--line);
+      padding: 1.5rem 0;
+      position: relative;
+      border-top: 1px solid var(--steel);
+      border-bottom: 1px solid var(--steel);
+      margin: 4rem 0;
+    }
+    .marquee-content {
+      display: flex;
+      width: max-content;
+      animation: scrollMarquee 30s linear infinite;
+    }
+    .marquee-item {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.5rem;
+      text-transform: uppercase;
+      color: var(--paper);
+      margin: 0 2.5rem;
+      white-space: nowrap;
+      letter-spacing: 0.1em;
+    }
+    .marquee-item span {
+      color: var(--ember);
+      margin-right: 2.5rem;
+    }
+    @keyframes scrollMarquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* Timeline */
+    .timeline-section {
+      max-width: 72rem;
+      margin: 6rem auto;
+      padding: 0 2.5rem;
+      position: relative;
+    }
+    .timeline-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 2.5rem;
+      width: 2px;
+      background: var(--line);
+    }
+    @media (min-width: 768px) {
+      .timeline-line { left: 50%; transform: translateX(-50%); }
+    }
+    .timeline-item {
+      position: relative;
+      padding-left: 3rem;
+      margin-bottom: 4rem;
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .timeline-item.visible { opacity: 1; transform: none; }
+    
+    @media (min-width: 768px) {
+      .timeline-item { padding-left: 0; width: 50%; }
+      .timeline-item:nth-child(odd) { text-align: right; padding-right: 3rem; left: 0; }
+      .timeline-item:nth-child(even) { text-align: left; padding-left: 3rem; left: 50%; }
+    }
+
+    .timeline-dot {
+      position: absolute;
+      top: 0;
+      left: -5px;
+      width: 12px;
+      height: 12px;
+      background: var(--obsidian);
+      border: 2px solid var(--ember);
+      border-radius: 50%;
+      z-index: 2;
+    }
+    @media (min-width: 768px) {
+      .timeline-item:nth-child(odd) .timeline-dot { right: -6px; left: auto; }
+      .timeline-item:nth-child(even) .timeline-dot { left: -6px; }
+    }
+    
+    .timeline-year {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--glass);
+      margin-bottom: 0.5rem;
+    }
+    .timeline-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.5rem;
+      color: var(--paper);
+      margin-bottom: 0.5rem;
+    }
+    .timeline-desc {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      color: var(--steel);
+      line-height: 1.6;
     }
   </style>
   <link rel="stylesheet" href="mobile.css" />
@@ -666,14 +831,15 @@
   </header>
 
   <!-- Page Hero -->
-  <div class="page-hero">
+  <canvas id="about-canvas"></canvas>
+  <div class="page-hero glitch-wrapper" style="position: relative; z-index: 1;">
     <p class="scene-label">Scene 00 — About</p>
     <h1 class="page-title"><span class="glitch-text">About Me</span></h1>
     <div class="page-divider"></div>
   </div>
 
   <!-- About Grid -->
-  <div class="about-grid">
+  <div class="about-grid glitch-wrapper">
     <div class="about-text">
       <p class="reveal">I'm a front-end engineer who treats the browser like a camera — framing, lighting, and pacing
         every interaction so it feels considered rather than assembled.</p>
@@ -695,6 +861,26 @@
       </div>
       <div class="spec-row"><span class="spec-label">Frame rate</span><span class="spec-value">Framer Motion, GSAP,
           60fps</span></div>
+    </div>
+  </div>
+
+  <!-- Infinite Marquee -->
+  <div class="marquee-container">
+    <div class="marquee-content">
+      <div class="marquee-item"><span>//</span>React</div>
+      <div class="marquee-item"><span>//</span>Three.js</div>
+      <div class="marquee-item"><span>//</span>WebGL</div>
+      <div class="marquee-item"><span>//</span>Next.js</div>
+      <div class="marquee-item"><span>//</span>Framer Motion</div>
+      <div class="marquee-item"><span>//</span>GSAP</div>
+      <div class="marquee-item"><span>//</span>Tailwind CSS</div>
+      <div class="marquee-item"><span>//</span>React</div>
+      <div class="marquee-item"><span>//</span>Three.js</div>
+      <div class="marquee-item"><span>//</span>WebGL</div>
+      <div class="marquee-item"><span>//</span>Next.js</div>
+      <div class="marquee-item"><span>//</span>Framer Motion</div>
+      <div class="marquee-item"><span>//</span>GSAP</div>
+      <div class="marquee-item"><span>//</span>Tailwind CSS</div>
     </div>
   </div>
 
@@ -720,32 +906,57 @@
         class="reveal">The Process</h2>
     </div>
     <div class="process-grid">
-      <div class="process-step">
+      <div class="process-step" data-speed="0.05">
         <div class="process-num">01</div>
-        <p class="process-title">Frame the Shot</p>
+        <p class="process-title" data-scramble="Frame the Shot">Frame the Shot</p>
         <p class="process-desc">Every project starts with deep research — understanding brand, audience, and story
           before a line of code is written.</p>
       </div>
-      <div class="process-step">
+      <div class="process-step" data-speed="0.15">
         <div class="process-num">02</div>
-        <p class="process-title">Expose the Idea</p>
+        <p class="process-title" data-scramble="Expose the Idea">Expose the Idea</p>
         <p class="process-desc">Wireframes and motion explorations reveal the pacing — I prototype early so we feel the
           rhythm before full production.</p>
       </div>
-      <div class="process-step">
+      <div class="process-step" data-speed="0.08">
         <div class="process-num">03</div>
-        <p class="process-title">Develop the Film</p>
+        <p class="process-title" data-scramble="Develop the Film">Develop the Film</p>
         <p class="process-desc">Engineering with obsessive attention to performance, accessibility, and the
           micro-details that make it memorable.</p>
       </div>
-      <div class="process-step">
+      <div class="process-step" data-speed="0.12">
         <div class="process-num">04</div>
-        <p class="process-title">Screen &amp; Iterate</p>
+        <p class="process-title" data-scramble="Screen &amp; Iterate">Screen &amp; Iterate</p>
         <p class="process-desc">Real user testing and refinement cycles until every scene plays exactly as intended —
           then we ship.</p>
       </div>
     </div>
   </section>
+
+  <!-- Experience Timeline -->
+  <section class="timeline-section">
+    <div class="timeline-line"></div>
+    <div class="timeline-item reveal">
+      <div class="timeline-dot"></div>
+      <p class="timeline-year">2023 — Present</p>
+      <h3 class="timeline-title" data-scramble="Senior Creative Developer">Senior Creative Developer</h3>
+      <p class="timeline-desc">Leading front-end architecture and WebGL experiences for premium brands, ensuring peak performance and cinematic animations across all devices.</p>
+    </div>
+    <div class="timeline-item reveal">
+      <div class="timeline-dot"></div>
+      <p class="timeline-year">2020 — 2023</p>
+      <h3 class="timeline-title" data-scramble="Front-End Engineer">Front-End Engineer</h3>
+      <p class="timeline-desc">Built highly interactive product interfaces using React and Three.js. Focused on fluid micro-interactions and rigorous accessibility standards.</p>
+    </div>
+    <div class="timeline-item reveal">
+      <div class="timeline-dot"></div>
+      <p class="timeline-year">2018 — 2020</p>
+      <h3 class="timeline-title" data-scramble="UI/UX Designer & Dev">UI/UX Designer & Dev</h3>
+      <p class="timeline-desc">Designed and developed award-winning marketing sites. Bridged the gap between design and engineering with rapid prototyping.</p>
+    </div>
+  </section>
+
+  <button id="sound-toggle" class="sound-toggle">[ Sound: Off ]</button>
 
   <!-- Footer -->
   <footer>
@@ -757,6 +968,190 @@
 
   <script>
     // Shared interaction logic has been migrated to global.js
+
+
+
+    // --- Interactive Spotlight Cursor ---
+    const cursorRing = document.getElementById('cursor-ring');
+    const cursorDot = document.getElementById('cursor-dot');
+    
+    // global.js already moves the cursor. We just add classes on hover.
+    const interactiveElements = document.querySelectorAll('a, button, .process-step, .timeline-item');
+    interactiveElements.forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursorRing.classList.add('spotlight');
+        cursorDot.classList.add('spotlight');
+      });
+      el.addEventListener('mouseleave', () => {
+        cursorRing.classList.remove('spotlight');
+        cursorDot.classList.remove('spotlight');
+      });
+    });
+
+    // --- Scroll-Velocity Glitch ---
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+    const glitchWrappers = document.querySelectorAll('.glitch-wrapper');
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const deltaY = window.scrollY - lastScrollY;
+          lastScrollY = window.scrollY;
+          
+          const velocity = Math.abs(deltaY);
+          
+          if(velocity > 20) {
+            const skew = Math.min(velocity * 0.1, 5) * (deltaY > 0 ? 1 : -1);
+            glitchWrappers.forEach(wrap => {
+              wrap.style.transform = `skewY(${skew}deg)`;
+              wrap.classList.add('glitch-active');
+            });
+            clearTimeout(window.glitchTimeout);
+            window.glitchTimeout = setTimeout(() => {
+              glitchWrappers.forEach(wrap => {
+                wrap.style.transform = 'none';
+                wrap.classList.remove('glitch-active');
+              });
+            }, 150);
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // --- Dynamic Text Scramble ---
+    const scrambleElements = document.querySelectorAll('[data-scramble]');
+    const chars = '!<>-_\\\\/[]{}—=+*^?#_';
+
+    function scrambleText(element) {
+      if(element.classList.contains('scrambled')) return;
+      element.classList.add('scrambling');
+      element.classList.add('scrambled');
+      
+      const targetText = element.getAttribute('data-scramble');
+      let iteration = 0;
+      
+      const interval = setInterval(() => {
+        element.innerText = targetText.split('').map((char, index) => {
+          if(index < iteration) return targetText[index];
+          return chars[Math.floor(Math.random() * chars.length)];
+        }).join('');
+        
+        if(iteration >= targetText.length) {
+          clearInterval(interval);
+          element.innerText = targetText; // Ensure exact match at the end
+        }
+        iteration += 1 / 3;
+      }, 30);
+    }
+
+    const scrambleObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting) {
+          if(entry.target.hasAttribute('data-scramble')) {
+            scrambleText(entry.target);
+          } else {
+            const scrambleChild = entry.target.querySelector('[data-scramble]');
+            if(scrambleChild) scrambleText(scrambleChild);
+          }
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.timeline-item, .process-step').forEach(el => scrambleObserver.observe(el));
+    
+    // --- Parallax & Timeline Logic ---
+    document.addEventListener('DOMContentLoaded', () => {
+      const parallaxElements = document.querySelectorAll('.process-step[data-speed]');
+      const timelineItems = document.querySelectorAll('.timeline-item');
+      
+      window.addEventListener('scroll', () => {
+        const scrolled = window.scrollY;
+        
+        // Parallax
+        parallaxElements.forEach(el => {
+          const speed = el.getAttribute('data-speed');
+          const yPos = -(scrolled * speed);
+          el.style.transform = `translateY(${yPos}px)`;
+        });
+
+        // Timeline Reveal
+        timelineItems.forEach(item => {
+          const rect = item.getBoundingClientRect();
+          if(rect.top < window.innerHeight * 0.85) {
+            item.classList.add('visible');
+          }
+        });
+      });
+    });
+
+    // --- WebGL Background ---
+    const canvas = document.getElementById('about-canvas');
+    if (canvas && typeof THREE !== 'undefined') {
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+      camera.position.z = 100;
+
+      // Create a wireframe "Lens" / Sphere
+      const geometry = new THREE.SphereGeometry(40, 32, 32);
+      const material = new THREE.MeshBasicMaterial({ 
+        color: 0x6FE3D9, 
+        wireframe: true, 
+        transparent: true, 
+        opacity: 0.15 
+      });
+      const sphere = new THREE.Mesh(geometry, material);
+      scene.add(sphere);
+
+      // Particle Field
+      const pGeo = new THREE.BufferGeometry();
+      const pCount = 500;
+      const pPos = new Float32Array(pCount * 3);
+      for(let i=0; i<pCount; i++) {
+        pPos[i*3] = (Math.random() - 0.5) * 200;
+        pPos[i*3+1] = (Math.random() - 0.5) * 200;
+        pPos[i*3+2] = (Math.random() - 0.5) * 200;
+      }
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+      const pMat = new THREE.PointsMaterial({ color: 0xFF6B3D, size: 1.5, transparent: true, opacity: 0.4 });
+      const particles = new THREE.Points(pGeo, pMat);
+      scene.add(particles);
+
+      let mouseX = 0;
+      let mouseY = 0;
+      document.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        sphere.rotation.y += 0.001;
+        sphere.rotation.x += 0.0005;
+        
+        particles.rotation.y += 0.0005;
+        
+        // Gentle camera follow
+        camera.position.x += (mouseX * 10 - camera.position.x) * 0.05;
+        camera.position.y += (mouseY * 10 - camera.position.y) * 0.05;
+        camera.lookAt(scene.position);
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
   </script>
   <script src="global.js"></script>
   <div class="page-transition-shutter"></div>

@@ -6,6 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
   <style>
     :root {
       --obsidian: #050608;
@@ -83,8 +89,33 @@
       color: var(--obsidian); padding: 0.8rem; font-family: 'Space Mono', monospace;
       font-size: 0.7rem; cursor: pointer; transition: all 0.3s;
       text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 1.5rem;
     }
     .play-btn:hover { background: transparent; color: var(--ember); }
+
+    .slider-group { margin-bottom: 1.2rem; }
+    .slider-group label {
+      display: flex; justify-content: space-between;
+      font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--steel);
+      text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;
+    }
+    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%;
+      background: var(--glass); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(111, 227, 217, 0.5);
+    }
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 2px; cursor: pointer; background: var(--line); }
+    input[type=range]:focus { outline: none; }
+
+    #drag-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(10, 12, 16, 0.9); z-index: 2000;
+      display: flex; justify-content: center; align-items: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+      border: 4px dashed var(--glass); box-sizing: border-box;
+    }
+    #drag-overlay.active { opacity: 1; }
+    .drag-msg { font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--glass); text-transform: uppercase; letter-spacing: 0.2em; }
 
     #audio-upload { display: none; }
 
@@ -131,6 +162,8 @@
     <a href="#" class="nav-mobile">[ Menu ]</a>
   </nav>
 
+  <div id="drag-overlay"><div class="drag-msg">Drop Audio File Here</div></div>
+
   <!-- Canvas -->
   <canvas id="visualizer-canvas"></canvas>
   <div id="game-info" class="glitch-text">SYNESTHESIA // Upload an audio track to begin.</div>
@@ -145,6 +178,20 @@
     </label>
     
     <button class="play-btn" id="play-btn">[ Play / Pause ]</button>
+
+    <div class="slider-group">
+      <label><span>Sensitivity</span><span id="sens-val">100%</span></label>
+      <input type="range" id="sensitivity" min="0.1" max="2.0" step="0.1" value="1.0">
+    </div>
+    <div class="slider-group">
+      <label><span>Bloom Strength</span><span id="bloom-val">1.5</span></label>
+      <input type="range" id="bloom-strength" min="0" max="3" step="0.1" value="1.5">
+    </div>
+    <div class="slider-group">
+      <label><span>Base Speed</span><span id="speed-val">1x</span></label>
+      <input type="range" id="base-speed" min="0.1" max="3" step="0.1" value="1.0">
+    </div>
+
     <audio id="audio-element"></audio>
   </div>
 
@@ -199,6 +246,17 @@
     const pointLight = new THREE.PointLight(0xffeedd, 2, 500);
     scene.add(pointLight);
 
+    // --- POST-PROCESSING ---
+    const renderScene = new THREE.RenderPass(scene, camera);
+    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+    bloomPass.threshold = 0.2;
+    bloomPass.strength = 1.5;
+    bloomPass.radius = 0.5;
+
+    const composer = new THREE.EffectComposer(renderer);
+    composer.addPass(renderScene);
+    composer.addPass(bloomPass);
+
     // --- AUDIO SETUP ---
     const audioElement = document.getElementById('audio-element');
     const uploadInput = document.getElementById('audio-upload');
@@ -208,18 +266,63 @@
     let audioCtx, analyser, dataArray;
     let isPlaying = false;
 
+    // UI Elements
+    const sensInput = document.getElementById('sensitivity');
+    const sensVal = document.getElementById('sens-val');
+    const bloomInput = document.getElementById('bloom-strength');
+    const bloomVal = document.getElementById('bloom-val');
+    const speedInput = document.getElementById('base-speed');
+    const speedVal = document.getElementById('speed-val');
+
+    let sensitivity = parseFloat(sensInput.value);
+    let baseSpeed = parseFloat(speedInput.value);
+
+    sensInput.addEventListener('input', (e) => {
+      sensitivity = parseFloat(e.target.value);
+      sensVal.innerText = Math.round(sensitivity * 100) + '%';
+    });
+    bloomInput.addEventListener('input', (e) => {
+      bloomPass.strength = parseFloat(e.target.value);
+      bloomVal.innerText = e.target.value;
+    });
+    speedInput.addEventListener('input', (e) => {
+      baseSpeed = parseFloat(e.target.value);
+      speedVal.innerText = e.target.value + 'x';
+    });
+
+    // Drag & Drop
+    const dragOverlay = document.getElementById('drag-overlay');
+    window.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dragOverlay.classList.add('active');
+    });
+    window.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      if(e.target === dragOverlay) dragOverlay.classList.remove('active');
+    });
+    window.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dragOverlay.classList.remove('active');
+      const file = e.dataTransfer.files[0];
+      if(file && file.type.startsWith('audio/')) {
+        loadAudioFile(file);
+      }
+    });
+
+    function loadAudioFile(file) {
+      const url = URL.createObjectURL(file);
+      audioElement.src = url;
+      infoText.innerText = "TRACK LOADED // " + file.name.toUpperCase();
+      infoText.setAttribute('data-glitch', infoText.innerText);
+      if(typeof decodeText === 'function') {
+        infoText.dataset.decoded = 'false';
+        decodeText(infoText);
+      }
+    }
+
     uploadInput.addEventListener('change', function() {
       const file = this.files[0];
-      if(file) {
-        const url = URL.createObjectURL(file);
-        audioElement.src = url;
-        infoText.innerText = "TRACK LOADED // " + file.name.toUpperCase();
-        infoText.setAttribute('data-glitch', infoText.innerText);
-        if(typeof decodeText === 'function') {
-          infoText.dataset.decoded = 'false';
-          decodeText(infoText);
-        }
-      }
+      if(file) loadAudioFile(file);
     });
 
     playBtn.addEventListener('click', () => {
@@ -251,28 +354,37 @@
       requestAnimationFrame(animate);
       controls.update();
 
-      group.rotation.y += 0.002;
-      group.rotation.x += 0.001;
+      let currentSpeed = baseSpeed;
 
       if(analyser && isPlaying) {
         analyser.getByteFrequencyData(dataArray);
 
-        // Core pulse based on bass
-        let bass = 0;
+        // Calculate frequency bands
+        let bass = 0, mid = 0, high = 0;
         for(let i=0; i<10; i++) bass += dataArray[i];
-        bass = bass / 10;
+        for(let i=10; i<100; i++) mid += dataArray[i];
+        for(let i=100; i<256; i++) high += dataArray[i];
         
+        bass = (bass / 10) * sensitivity;
+        mid = (mid / 90) * sensitivity;
+        high = (high / 156) * sensitivity;
+        
+        // Dynamic speed based on mid frequencies
+        currentSpeed = baseSpeed + (mid / 255) * 5;
+
         const scale = 1 + (bass / 255) * 1.5;
         core.scale.set(scale, scale, scale);
         coreMat.emissiveIntensity = 0.5 + (bass / 255) * 2;
         pointLight.intensity = 2 + (bass / 255) * 5;
 
-        // Particle displacement based on frequency
+        // Particle displacement based on frequency and high notes
         const positions = pGeo.attributes.position.array;
         for(let i=0; i<particleCount; i++) {
-          const val = dataArray[i % dataArray.length] / 255;
+          // Add sensitivity multiplier to val
+          const val = Math.min(1.0, (dataArray[i % dataArray.length] / 255) * sensitivity);
           const angle = (i / particleCount) * Math.PI * 2;
-          const radius = 50 + (val * 40);
+          // Expand more on high notes
+          const radius = 50 + (val * 40) + (high / 255) * 20;
           
           positions[i*3] += (Math.cos(angle) * radius - positions[i*3]) * 0.1;
           positions[i*3+1] += ((val * 30 * (i%2==0?1:-1)) - positions[i*3+1]) * 0.1;
@@ -281,7 +393,10 @@
         pGeo.attributes.position.needsUpdate = true;
       }
 
-      renderer.render(scene, camera);
+      group.rotation.y += 0.002 * currentSpeed;
+      group.rotation.x += 0.001 * currentSpeed;
+
+      composer.render();
     }
     animate();
 
@@ -289,6 +404,7 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
     });
   </script>
 </body>
