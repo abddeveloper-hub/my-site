@@ -12,134 +12,10 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-  <style>
-    :root {
-      --obsidian: #050608;
-      --ember: #ff6b3d;
-      --glass: #6fe3d9;
-      --steel: #8a93a6;
-      --paper: #f3f1ec;
-      --line: #1a1e28;
-      --panel-bg: rgba(10, 12, 16, 0.85);
-      --panel-border: rgba(111, 227, 217, 0.2);
-    }
-    
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: var(--obsidian); color: var(--paper);
-      font-family: 'Inter', sans-serif;
-      overflow: hidden; 
-      background-color: #000;
-    }
-
-    /* ── Navbar ── */
-    nav {
-      position: absolute; top: 0; left: 0; right: 0; z-index: 1000;
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 1.5rem 2.5rem; mix-blend-mode: difference;
-    }
-    .nav-logo {
-      display: flex; align-items: center; gap: 0.6rem;
-      text-decoration: none; position: relative;
-    }
-    .logo-mark { transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
-    .nav-logo:hover .logo-mark { transform: scale(1.1); }
-    .logo-abd { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 1.1rem; letter-spacing: 0.1em; color: var(--paper); }
-    .logo-dev { font-family: 'Inter', sans-serif; font-weight: 300; font-size: 1.1rem; letter-spacing: 0.1em; color: var(--paper); margin-left: -0.2rem; }
-    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
-    .nav-links a {
-      font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase;
-      letter-spacing: 0.2em; color: var(--paper); text-decoration: none; transition: color 0.3s;
-    }
-    .nav-links a:hover { color: var(--ember); }
-    .nav-mobile { display: none; }
-
-    #visualizer-canvas {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      z-index: 0;
-    }
-
-    .control-panel {
-      position: absolute; right: 2rem; top: 50%; transform: translateY(-50%);
-      width: 320px; background: var(--panel-bg); backdrop-filter: blur(12px);
-      border: 1px solid var(--panel-border); border-radius: 8px;
-      padding: 1.5rem; z-index: 100;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-    }
-    
-    .panel-header {
-      font-family: 'Space Mono', monospace; font-size: 0.8rem;
-      color: var(--glass); letter-spacing: 0.2em; text-transform: uppercase;
-      margin-bottom: 1.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.5rem;
-    }
-
-    .upload-btn {
-      display: block; width: 100%; text-align: center;
-      background: rgba(111, 227, 217, 0.1); border: 1px solid var(--glass);
-      color: var(--glass); padding: 0.8rem; font-family: 'Space Mono', monospace;
-      font-size: 0.7rem; cursor: pointer; transition: all 0.3s;
-      text-transform: uppercase; letter-spacing: 0.1em; text-decoration: none;
-      margin-bottom: 1rem;
-    }
-    .upload-btn:hover { background: var(--glass); color: var(--obsidian); }
-
-    .play-btn {
-      display: block; width: 100%; text-align: center;
-      background: var(--ember); border: 1px solid var(--ember);
-      color: var(--obsidian); padding: 0.8rem; font-family: 'Space Mono', monospace;
-      font-size: 0.7rem; cursor: pointer; transition: all 0.3s;
-      text-transform: uppercase; letter-spacing: 0.1em;
-      margin-bottom: 1.5rem;
-    }
-    .play-btn:hover { background: transparent; color: var(--ember); }
-
-    .slider-group { margin-bottom: 1.2rem; }
-    .slider-group label {
-      display: flex; justify-content: space-between;
-      font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--steel);
-      text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;
-    }
-    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%;
-      background: var(--glass); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(111, 227, 217, 0.5);
-    }
-    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 2px; cursor: pointer; background: var(--line); }
-    input[type=range]:focus { outline: none; }
-
-    #drag-overlay {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(10, 12, 16, 0.9); z-index: 2000;
-      display: flex; justify-content: center; align-items: center;
-      opacity: 0; pointer-events: none; transition: opacity 0.3s;
-      border: 4px dashed var(--glass); box-sizing: border-box;
-    }
-    #drag-overlay.active { opacity: 1; }
-    .drag-msg { font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--glass); text-transform: uppercase; letter-spacing: 0.2em; }
-
-    #audio-upload { display: none; }
-
-    #game-info {
-      position: absolute; bottom: 2rem; left: 2.5rem; pointer-events: none;
-      font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--steel);
-      letter-spacing: 0.1em; text-transform: uppercase; z-index: 10;
-    }
-
-    @media (max-width: 768px) {
-      .nav-links { display: none; }
-      .nav-mobile { 
-        display: block; font-family: 'Space Mono', monospace; font-size: 0.7rem; 
-        text-transform: uppercase; letter-spacing: 0.2em; color: var(--paper); text-decoration: none;
-      }
-      .control-panel {
-        right: 5%; left: 5%; bottom: 2rem; top: auto; transform: none; width: 90%; padding: 1rem;
-      }
-      #game-info { top: 6rem; bottom: auto; }
-    }
-  </style>
-  <link rel="stylesheet" href="mobile.css" />
+  <link rel="stylesheet" href="global.css" />
+  
 </head>
-<body>
+<body class="playground">
 
   <!-- Navbar -->
   <nav id="navbar">
@@ -151,14 +27,14 @@
       <span class="logo-abd">ABD</span>
       <span class="logo-dev">DEVELOPER</span>
     </a>
-    <ul class="nav-links">
-      <li><a href="index.html">[ Home ]</a></li>
-      <li><a href="lab.html">[ Lab 01 ]</a></li>
-      <li><a href="lab2.html">[ Lab 02 ]</a></li>
-      <li><a href="lab3.html">[ Lab 03 ]</a></li>
-      <li><a href="lab4.html">[ Lab 04 ]</a></li>
-      <li><a href="lab5.html" style="color:var(--glass);">[ Lab 05: Audio ]</a></li>
-    </ul>
+          <ul class="nav-links">
+        <li><a href="index.html">[ Home ]</a></li>
+        <li><a href="about.html">[ About ]</a></li>
+        <li><a href="work.html">[ Work ]</a></li>
+        <li><a href="lab.html">[ Lab ]</a></li>
+        <li><a href="social.html">[ Social ]</a></li>
+        <li><a href="contact.html">[ Contact ]</a></li>
+      </ul>
     <a href="#" class="nav-mobile">[ Menu ]</a>
   </nav>
 
@@ -169,7 +45,7 @@
   <div id="game-info" class="glitch-text">SYNESTHESIA // Upload an audio track to begin.</div>
 
   <!-- UI Control Panel -->
-  <div class="control-panel">
+  <div class="control-panel glass-panel">
     <div class="panel-header">/// SYNESTHESIA ENGINE</div>
     
     <label class="upload-btn">
@@ -216,26 +92,32 @@
     scene.add(group);
 
     // Icosahedron Core
-    const coreGeo = new THREE.IcosahedronGeometry(20, 2);
-    const coreMat = new THREE.MeshStandardMaterial({
-      color: 0xff6b3d, wireframe: true, emissive: 0xffaa00, emissiveIntensity: 0.5
+    const coreGeo = new THREE.IcosahedronGeometry(20, 4);
+    const coreMat = new THREE.MeshPhysicalMaterial({
+      color: 0xff6b3d,
+      metalness: 1.0,
+      roughness: 0.1,
+      wireframe: true,
+      emissive: 0xff6b3d,
+      emissiveIntensity: 0.5,
+      clearcoat: 1.0
     });
     const core = new THREE.Mesh(coreGeo, coreMat);
     group.add(core);
 
     // Particle Ring
-    const particleCount = 512;
+    const particleCount = 1024;
     const pGeo = new THREE.BufferGeometry();
     const pPos = new Float32Array(particleCount * 3);
     for(let i=0; i<particleCount; i++) {
       const angle = (i / particleCount) * Math.PI * 2;
-      pPos[i*3] = Math.cos(angle) * 50;
-      pPos[i*3+1] = 0;
-      pPos[i*3+2] = Math.sin(angle) * 50;
+      pPos[i*3] = Math.cos(angle) * 60;
+      pPos[i*3+1] = (Math.random() - 0.5) * 10;
+      pPos[i*3+2] = Math.sin(angle) * 60;
     }
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
     const pMat = new THREE.PointsMaterial({
-      color: 0x6fe3d9, size: 2.0, blending: THREE.AdditiveBlending, transparent: true
+      color: 0x6fe3d9, size: 1.5, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.8
     });
     const particles = new THREE.Points(pGeo, pMat);
     group.add(particles);
@@ -256,6 +138,14 @@
     const composer = new THREE.EffectComposer(renderer);
     composer.addPass(renderScene);
     composer.addPass(bloomPass);
+
+    // Film Grain
+    const filmPass = new THREE.ShaderPass(THREE.FilmShader);
+    filmPass.uniforms['nIntensity'].value = 0.3;
+    filmPass.uniforms['sIntensity'].value = 0.05;
+    filmPass.uniforms['sCount'].value = 648;
+    filmPass.uniforms['grayscale'].value = false;
+    composer.addPass(filmPass);
 
     // --- AUDIO SETUP ---
     const audioElement = document.getElementById('audio-element');
@@ -407,5 +297,34 @@
       composer.setSize(window.innerWidth, window.innerHeight);
     });
   </script>
+
+  <!-- Lab Navigation -->
+  <div class="lab-nav" style="position: fixed; bottom: 2.5rem; left: 50%; transform: translateX(-50%); z-index: 10000; font-family: 'Space Mono', monospace; font-size: 0.7rem; display: flex; gap: 1.5rem; border: 1px solid var(--line); padding: 0.75rem 1.5rem; background: rgba(11,13,18,0.85); backdrop-filter: blur(12px); border-radius: 2px; white-space: nowrap;">
+    <a href="lab.html" class="lab-link" data-lab="lab.html" style="color: var(--steel); text-decoration: none; transition: color 0.3s; text-transform: uppercase;">[01] The Lab</a>
+    <a href="lab2.html" class="lab-link" data-lab="lab2.html" style="color: var(--steel); text-decoration: none; transition: color 0.3s; text-transform: uppercase;">[02] Playground</a>
+    <a href="lab3.html" class="lab-link" data-lab="lab3.html" style="color: var(--steel); text-decoration: none; transition: color 0.3s; text-transform: uppercase;">[03] Game Engine</a>
+    <a href="lab4.html" class="lab-link" data-lab="lab4.html" style="color: var(--steel); text-decoration: none; transition: color 0.3s; text-transform: uppercase;">[04] Cosmic Scale</a>
+    <a href="lab5.html" class="lab-link" data-lab="lab5.html" style="color: var(--steel); text-decoration: none; transition: color 0.3s; text-transform: uppercase;">[05] Audio Vis</a>
+  </div>
+  <style>
+    .lab-link:hover { color: var(--paper) !important; text-shadow: 0 0 10px rgba(243, 241, 236, 0.5); }
+    .lab-link.active { color: var(--ember) !important; text-shadow: 0 0 10px rgba(255, 107, 61, 0.5); }
+    @media (max-width: 768px) {
+      .lab-nav { width: 90%; flex-wrap: wrap; justify-content: center; gap: 0.5rem; padding: 0.75rem; bottom: 1rem; }
+      .lab-link { font-size: 0.6rem; }
+    }
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentPath = window.location.pathname.split('/').pop() || 'lab.html';
+      const links = document.querySelectorAll('.lab-link');
+      links.forEach(link => {
+        if(link.getAttribute('data-lab') === currentPath) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+
 </body>
 </html>

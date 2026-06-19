@@ -86,3 +86,19 @@
   background: none; border: none; padding: 0;
 }
 #sound-toggle:hover { color: var(--ember); }
+
+/* Global Sound Toggle */
+.sound-toggle { position: fixed; bottom: 2.5rem; right: 2.5rem; z-index: 10000; background: transparent; border: 1px solid var(--steel); color: var(--steel); font-family: 'Space Mono', monospace; font-size: 0.65rem; text-transform: uppercase; padding: 0.5rem 1rem; cursor: pointer; transition: all 0.3s; }
+.sound-toggle:hover { border-color: var(--ember); color: var(--ember); }
+
+/* Mobile typography and layout fixes */
+@media (max-width: 640px) {
+  .page-title { font-size: clamp(2.5rem, 12vw, 4rem) !important; word-wrap: break-word; }
+  .page-hero { padding: 7rem 1.5rem 3rem !important; }
+  .about-text p { font-size: 1.25rem !important; }
+  body { overflow-x: hidden !important; width: 100vw; }
+  .process-title, .timeline-title { font-size: 1.75rem !important; }
+}
+
+/* Hide custom cursor on mobile devices */
+@media (max-width: 768px) { #cursor-dot, #cursor-ring, #cursor-text { display: none !important; } }

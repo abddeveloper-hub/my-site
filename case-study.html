@@ -4,148 +4,8 @@
   <meta charset="UTF-8">
   <title>Aperture | Case Study | Premium Engineering</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    :root {
-      --obsidian: #050608;
-      --ember: #ff6b3d;
-      --glass: #6fe3d9;
-      --steel: #8a93a6;
-      --paper: #f3f1ec;
-      --line: #1a1e28;
-    }
-    
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: var(--obsidian); color: var(--paper);
-      font-family: 'Inter', sans-serif;
-      overflow-x: hidden; 
-      background-color: #000;
-    }
-
-    /* ── Navbar ── */
-    #navbar {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 40;
-      transition: background 0.5s ease, border-color 0.5s ease;
-      border-bottom: 1px solid transparent;
-    }
-    #navbar.scrolled {
-      background: rgba(5, 6, 8, 0.85); backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--line);
-    }
-    .nav-inner {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 1.5rem 2.5rem; max-width: 1600px; margin: 0 auto;
-    }
-    .nav-logo {
-      display: flex; align-items: center; gap: 0.6rem;
-      text-decoration: none; position: relative;
-    }
-    .logo-mark { transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
-    .nav-logo:hover .logo-mark { transform: scale(1.1); }
-    .logo-abd { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 1.1rem; letter-spacing: 0.1em; color: var(--paper); }
-    .logo-dev { font-family: 'Inter', sans-serif; font-weight: 300; font-size: 1.1rem; letter-spacing: 0.1em; color: var(--paper); margin-left: -0.2rem; }
-    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
-    .nav-links a {
-      font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase;
-      letter-spacing: 0.2em; color: var(--steel); text-decoration: none; transition: color 0.3s;
-    }
-    .nav-links a:hover { color: var(--paper); }
-    .nav-mobile { display: none; }
-
-    @media (max-width: 768px) {
-      .nav-links { display: none; }
-      .nav-mobile { 
-        display: block; font-family: 'Space Mono', monospace; font-size: 0.7rem; 
-        text-transform: uppercase; letter-spacing: 0.2em; color: var(--paper); text-decoration: none;
-      }
-    }
-
-    /* ── Hero ── */
-    .cs-hero {
-      height: 100vh; display: flex; flex-direction: column;
-      justify-content: center; align-items: center; text-align: center;
-      position: relative; padding: 0 2rem;
-    }
-    .cs-hero::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      background: radial-gradient(circle at center, rgba(111,227,217,0.1) 0%, transparent 50%);
-      z-index: -1;
-    }
-    .cs-label {
-      font-family: 'Space Mono', monospace; font-size: 0.8rem;
-      color: var(--glass); letter-spacing: 0.3em; text-transform: uppercase;
-      margin-bottom: 2rem;
-    }
-    .cs-title {
-      font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(3rem, 10vw, 8rem);
-      line-height: 1; margin-bottom: 2rem; color: var(--ember);
-    }
-    .cs-tags {
-      display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
-      font-family: 'Space Mono', monospace; font-size: 0.7rem;
-      color: var(--steel); letter-spacing: 0.1em; text-transform: uppercase;
-    }
-    .cs-tags span {
-      padding: 0.4rem 1rem; border: 1px solid var(--line); border-radius: 20px;
-    }
-
-    /* ── Content ── */
-    .cs-content {
-      max-width: 1000px; margin: 0 auto; padding: 5rem 2rem;
-    }
-    .cs-grid {
-      display: grid; grid-template-columns: 1fr; gap: 4rem;
-      margin-bottom: 6rem;
-    }
-    @media (min-width: 768px) {
-      .cs-grid { grid-template-columns: 1fr 2fr; }
-    }
-    .cs-grid h3 {
-      font-family: 'Space Mono', monospace; font-size: 0.9rem;
-      color: var(--glass); letter-spacing: 0.2em; text-transform: uppercase;
-      margin-bottom: 1.5rem;
-    }
-    .cs-grid p {
-      font-size: 1.1rem; line-height: 1.8; color: var(--steel); margin-bottom: 1.5rem;
-    }
-    
-    .cs-image-full {
-      width: 100%; height: 60vh; background: #11141b;
-      margin-bottom: 6rem; border: 1px solid var(--line);
-      display: flex; justify-content: center; align-items: center;
-      font-family: 'Space Mono', monospace; color: var(--steel);
-      font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase;
-      position: relative; overflow: hidden;
-    }
-    .cs-image-full::after {
-      content: ''; position: absolute; inset: 0;
-      background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%);
-      background-size: 200% 200%;
-      animation: shine 4s infinite linear;
-    }
-
-    @keyframes shine {
-      0% { background-position: -200% -200%; }
-      100% { background-position: 200% 200%; }
-    }
-
-    /* ── Next Project ── */
-    .next-project {
-      text-align: center; padding: 8rem 2rem; border-top: 1px solid var(--line);
-    }
-    .next-project a {
-      font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(2rem, 6vw, 4rem);
-      color: var(--paper); text-decoration: none; transition: color 0.3s;
-    }
-    .next-project a:hover { color: var(--glass); }
-    .next-project p {
-      font-family: 'Space Mono', monospace; font-size: 0.7rem;
-      color: var(--steel); letter-spacing: 0.3em; text-transform: uppercase;
-      margin-bottom: 2rem;
-    }
-
-  </style>
-  <link rel="stylesheet" href="mobile.css" />
+  <link rel="stylesheet" href="global.css" />
+  
 </head>
 <body>
 
@@ -160,10 +20,10 @@
         <span class="logo-abd">ABD</span>
         <span class="logo-dev">DEVELOPER</span>
       </a>
-      <ul class="nav-links">
+            <ul class="nav-links">
         <li><a href="index.html">[ Home ]</a></li>
         <li><a href="about.html">[ About ]</a></li>
-        <li><a href="work.html" style="color:var(--paper);">[ Work ]</a></li>
+        <li><a href="work.html">[ Work ]</a></li>
         <li><a href="lab.html">[ The Lab ]</a></li>
         <li><a href="contact.html">[ Contact ]</a></li>
       </ul>

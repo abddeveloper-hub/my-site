@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>BATTLE ARENA // REALISM_ULTRA_v15</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body { margin: 0; background: #0a0b12; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; user-select: none; touch-action: none; }
+    canvas { display: block; width: 100vw; height: 100vh; }
+
+    #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; padding: 25px; display: none; }
+    .glass { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; padding: 12px; pointer-events: auto; }
+
+    /* PRO HUD */
+    #kill-feed { position: fixed; top: 30px; left: 30px; display: flex; flex-direction: column; gap: 5px; }
+    .kill-msg { background: rgba(0,0,0,0.7); padding: 5px 15px; font-size: 11px; font-weight: 800; color: #ff6b3d; border-left: 3px solid #ff6b3d; animation: slideIn 0.3s ease-out; }
+    @keyframes slideIn { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    #minimap { position: fixed; top: 30px; right: 30px; width: 150px; height: 150px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.6); overflow: hidden; }
+    .node-enemy { position: absolute; width: 5px; height: 5px; background: #ff3300; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 10px #ff3300; }
+
+    .status-bars { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); width: 340px; text-align: center; }
+    .bar-bg { width: 100%; height: 8px; background: rgba(0,0,0,0.8); border-radius: 2px; overflow: hidden; margin-bottom: 6px; border: 1px solid rgba(255,255,255,0.1); }
+    #hp-fill { height: 100%; background: linear-gradient(90deg, #ff4400, #ffaa00); width: 100%; transition: width 0.3s; }
+    #armor-fill { height: 100%; background: linear-gradient(90deg, #0077ff, #00ffff); width: 100%; transition: width 0.3s; }
+
+    #overlay { position: fixed; inset: 0; background: radial-gradient(circle, #2a1a1e 0%, #050505 100%); z-index: 100; display: flex; align-items: center; justify-content: center; text-align: center; }
+    .btn-action { background: #ff4400; color: white; padding: 22px 60px; font-weight: 900; font-size: 24px; border-radius: 2px; cursor: pointer; border: none; text-transform: uppercase; letter-spacing: 5px; box-shadow: 0 8px 0 #8a2400; }
+
+    #crosshair { position: fixed; top: 50%; left: 50%; width: 30px; height: 30px; border: 1.5px solid white; border-radius: 50%; transform: translate(-50%, -50%); opacity: 0.7; }
+    #crosshair.locked { border-color: #ff3300; background: rgba(255, 51, 0, 0.2); transform: translate(-50%, -50%) scale(1.3); }
+  </style>
+</head>
+<body>
+
+  <div id="overlay">
+    <div class="glass p-12 max-w-xl bg-transparent border-none">
+      <div class="mb-4 text-orange-500 text-sm font-bold tracking-[0.8em] uppercase animate-pulse">Tactical Link Established</div>
+      <h1 class="text-8xl font-black italic mb-6 text-white tracking-tighter">ARENA PRO</h1>
+      <button class="btn-action" onclick="startGame()">Connect Protocol</button>
+      <p class="mt-12 text-[10px] text-white/20 uppercase tracking-widest font-bold">120+ Trees // 20+ Enemies // Realistic Sunset Shaders</p>
+    </div>
+  </div>
+
+  <div id="hud">
+    <div id="kill-feed"></div>
+    <div id="minimap"><div id="mm-content" class="relative w-full h-full"></div></div>
+
+    <div style="position:fixed; bottom:120px; right:60px; text-align:right">
+      <div class="text-[10px] font-black text-orange-500 uppercase tracking-widest">AK-15 Modified</div>
+      <div class="text-4xl font-black italic">30<span class="text-xl text-white/30">/120</span></div>
+    </div>
+
+    <div class="status-bars">
+      <div class="bar-bg"><div id="armor-fill" style="width:100%"></div></div>
+      <div class="bar-bg"><div id="hp-fill" style="width:100%"></div></div>
+    </div>
+
+    <div id="joystick" style="position:fixed; bottom:50px; left:50px; width:130px; height:130px; border:2px solid rgba(255,255,255,0.1); border-radius:50%;"><div id="handle" style="position:absolute; top:50%; left:50%; width:50px; height:50px; background:#fff; border-radius:50%; transform:translate(-50%,-50%);"></div></div>
+    <div id="fire-btn" style="position:fixed; bottom:60px; right:60px; width:100px; height:100px; background:rgba(255,107,61,0.6); border:4px solid #ff6b3d; border-radius:50%; pointer-events:auto;"></div>
+  </div>
+
+  <div id="crosshair"></div>
+
+  <script>
+    let scene, camera, renderer, player, buggy;
+    let robots = [], bullets = [], obstacles = [], tracers = [];
+    let isRunning = false, inVehicle = false;
+    let yaw = 0, pitch = 0, keys = {}, hp = 100, kills = 0, walkPhase = 0;
+    let joy = { active: false, x: 0, y: 0, sx: 0, sy: 0 };
+
+    function createCharacter(c) {
+      const g = new THREE.Group();
+      const m = new THREE.MeshStandardMaterial({ color: c, metalness: 0.8, roughness: 0.2 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.1, 0.4), m); body.position.y = 0.55; body.castShadow = true; g.add(body);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), new THREE.MeshStandardMaterial({color:0xffdbac})); head.position.y = 1.35; g.add(head);
+      const visor = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.1, 0.1), new THREE.MeshBasicMaterial({color: c === 0x222222 ? 0x00ffff : 0xff3300}));
+      visor.position.set(0, 1.4, 0.21); g.add(visor);
+      const gun = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.2, 0.8), new THREE.MeshStandardMaterial({color:0x111})); gun.position.set(0.4, 1.0, -0.3); g.add(gun);
+      const lL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.3), m); lL.position.set(-0.2, 0.4, 0); g.add(lL);
+      const rL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.3), m); rL.position.set(0.2, 0.4, 0); g.add(rL);
+      const lA = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.7, 0.2), m); lA.position.set(-0.45, 0.9, 0); g.add(lA);
+      const rA = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.7, 0.2), m); rA.position.set(0.45, 0.9, 0); g.add(rA);
+      g.userData = { lL, rL, lA, rA, gun, hp: 100 }; return g;
+    }
+
+    function init() {
+      scene = new THREE.Scene(); scene.background = new THREE.Color(0xff8c42);
+      scene.fog = new THREE.Fog(0xff8c42, 50, 400);
+      camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 2000);
+      renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+      renderer.setSize(window.innerWidth, window.innerHeight); renderer.setPixelRatio(1);
+      renderer.shadowMap.enabled = true; document.body.appendChild(renderer.domElement);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+      const sun = new THREE.DirectionalLight(0xffaa44, 1.5); sun.position.set(100, 200, 100); sun.castShadow = true; scene.add(sun);
+
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({ color: 0x556b2f, roughness: 0.8 }));
+      floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+
+      // Environment - RUINED CITY
+      for(let i=0; i<25; i++) {
+        const hG = new THREE.BoxGeometry(15, 20 + Math.random()*30, 15);
+        const h = new THREE.Mesh(hG, new THREE.MeshStandardMaterial({ color: 0x5d4037 }));
+        h.position.set((Math.random()-0.5)*800, hG.parameters.height/2, (Math.random()-0.5)*800);
+        scene.add(h); obstacles.push(h);
+      }
+
+      // TROPICAL FOREST
+      for(let i=0; i<120; i++) {
+        const t = new THREE.Group();
+        const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.6, 10), new THREE.MeshLambertMaterial({ color: 0x3b2211 })); tr.position.y = 5;
+        const lv = new THREE.Mesh(new THREE.SphereGeometry(4, 8, 8), new THREE.MeshLambertMaterial({ color: 0x114400 })); lv.position.y = 10;
+        t.add(tr); t.add(lv); t.position.set((Math.random()-0.5)*1200, 0, (Math.random()-0.5)*1200);
+        scene.add(t); obstacles.push(tr);
+      }
+
+      buggy = new THREE.Group();
+      const bB = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 5), new THREE.MeshStandardMaterial({color:0x222})); bB.position.y = 1; buggy.add(bB);
+      buggy.position.set(15, 0, 15); scene.add(buggy);
+
+      player = createCharacter(0x222222); scene.add(player);
+
+      // SPAWN ENEMIES
+      for(let i=0; i<20; i++) {
+        const r = createCharacter(0xcc0000); r.position.set((Math.random()-0.5)*800, 0, (Math.random()-0.5)*800);
+        scene.add(r); robots.push(r);
+        const n = document.createElement('div'); n.className='node-enemy'; document.getElementById('mm-content').appendChild(n); r.userData.node = n;
+      }
+
+      window.addEventListener('keydown', e => keys[e.code] = true);
+      window.addEventListener('keyup', e => keys[e.code] = false);
+      document.addEventListener('mousemove', e => { if(document.pointerLockElement){ yaw -= e.movementX*0.003; pitch = Math.max(-0.8, Math.min(0.4, pitch-e.movementY*0.003)); } });
+      window.onmousedown = () => { if(isRunning && !inVehicle) shoot(); };
+      animate();
+    }
+
+    function shoot() {
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({color:0x00ffff}));
+      b.position.copy(player.position).add(new THREE.Vector3(0,1.4,0));
+      const dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+      b.userData = { vel: dir.multiplyScalar(6), life: 60 };
+      scene.add(b); bullets.push(b);
+      player.userData.gun.position.z = 0.2;
+    }
+
+    function startGame() { document.getElementById('overlay').style.display='none'; document.getElementById('hud').style.display='block'; isRunning = true; document.body.requestPointerLock(); }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if(!isRunning) return;
+      const now = Date.now();
+
+      if(inVehicle) {
+        player.visible = false; const s = keys['KeyW'] ? 1 : keys['KeyS'] ? -0.5 : 0;
+        if(keys['KeyA']) buggy.rotation.y += 0.05; if(keys['KeyD']) buggy.rotation.y -= 0.05;
+        buggy.translateZ(-s); player.position.copy(buggy.position);
+        camera.position.set(buggy.position.x + Math.sin(buggy.rotation.y)*15, buggy.position.y+8, buggy.position.z + Math.cos(buggy.rotation.y)*15);
+        camera.lookAt(buggy.position);
+      } else {
+        player.visible = true; player.rotation.y = yaw;
+        camera.position.set(player.position.x + Math.sin(yaw)*9, player.position.y+5+pitch*12, player.position.z+Math.cos(yaw)*9);
+        camera.lookAt(player.position.clone().add(new THREE.Vector3(0,1.5,0)));
+        let mx = 0, mz = 0;
+        if(keys['KeyW']) mz -= 1; if(keys['KeyS']) mz += 1; if(keys['KeyA']) mx -= 1; if(keys['KeyD']) mx += 1;
+        if(mx !== 0 || mz !== 0) {
+          const s = keys['ShiftLeft'] ? 0.45 : 0.25;
+          const old = player.position.clone();
+          player.position.x += (Math.cos(yaw)*mx - Math.sin(yaw)*-mz)*s; player.position.z += (Math.sin(yaw)*-mx - Math.cos(yaw)*-mz)*s;
+          obstacles.forEach(o => { if(player.position.distanceTo(o.position) < 8) player.position.copy(old); });
+          walkPhase += 0.25;
+          player.userData.lL.rotation.x = Math.sin(walkPhase)*0.7; player.userData.rL.rotation.x = -Math.sin(walkPhase)*0.7;
+          player.userData.lA.rotation.x = -Math.sin(walkPhase)*0.4; player.userData.rA.rotation.x = Math.sin(walkPhase)*0.4;
+        }
+      }
+      player.userData.gun.position.z *= 0.8;
+
+      // UPDATE BULLETS & AI
+      for(let i=bullets.length-1; i>=0; i--) {
+        const b = bullets[i]; b.position.add(b.userData.vel); b.userData.life--;
+        robots.forEach(r => { if(r.visible && b.position.distanceTo(r.position.clone().add(new THREE.Vector3(0,1,0))) < 2.5) {
+          r.visible=false; r.userData.node.style.display='none'; kills++; document.getElementById('score-text').innerText = "KILLS: " + String(kills).padStart(2,'0');
+          const km = document.createElement('div'); km.className='kill-msg'; km.innerText="UNIT_NEUTRALIZED // BATTLE_XP+";
+          document.getElementById('kill-feed').appendChild(km); setTimeout(()=>km.remove(), 2000);
+          setTimeout(() => { r.visible=true; r.userData.node.style.display='block'; r.position.set((Math.random()-0.5)*800, 0, (Math.random()-0.5)*800); }, 5000);
+        }});
+        if(b.userData.life <= 0) { scene.remove(b); bullets.splice(i, 1); }
+      }
+
+      robots.forEach(r => {
+        if(!r.visible) return;
+        const relX = (r.position.x - player.position.x) * 0.4; const relZ = (r.position.z - player.position.z) * 0.4;
+        r.userData.node.style.left = (50 + relX) + '%'; r.userData.node.style.top = (50 + relZ) + '%';
+        const d = player.position.distanceTo(r.position);
+        if(d < 80) { r.lookAt(player.position); if(d > 15) r.position.addScaledVector(new THREE.Vector3().subVectors(player.position, r.position).normalize(), 0.05); }
+      });
+
+      renderer.render(scene, camera);
+    }
+    init();
+  </script>
+</body>
+</html>

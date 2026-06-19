@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Node — ABDUL WAHID</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="global.css">
+  <style>
+    .message-card { border-left: 2px solid var(--ember); transition: all 0.3s ease; }
+    .message-card:hover { background: rgba(255,255,255,0.05); }
+  </style>
+</head>
+<body class="bg-obsidian text-paper overflow-x-hidden">
+  <div class="grain"></div>
+
+  <header id="navbar">
+    <nav class="nav-inner glass-panel">
+      <a href="index.html" class="nav-logo">
+        <span class="logo-abd">ABD</span><span class="logo-dev">ADMIN</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">[ Home ]</a></li>
+        <li><a href="contact.html">[ Contact ]</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="pt-32 pb-20 px-6 max-w-5xl mx-auto">
+
+    <!-- Login Section -->
+    <div id="login-section" class="max-w-md mx-auto reveal">
+      <span class="scene-label">Security Protocol</span>
+      <h1 class="page-title text-glow"><span class="glitch-text">Authenticate.</span></h1>
+      <div class="page-divider mb-12"></div>
+
+      <div class="glass-panel p-8">
+        <form id="login-form" class="space-y-6">
+          <div>
+            <label for="username" class="block text-[10px] font-mono uppercase text-steel mb-2">Username</label>
+            <input type="text" id="username" class="w-full bg-white/5 border border-line p-3 outline-none focus:border-ember transition-colors" required>
+          </div>
+          <div>
+            <label for="password" class="block text-[10px] font-mono uppercase text-steel mb-2">Password</label>
+            <input type="password" id="password" class="w-full bg-white/5 border border-line p-3 outline-none focus:border-ember transition-colors" required>
+          </div>
+          <button type="submit" class="mag-btn w-full py-4 bg-ember text-obsidian font-bold"><span>INITIATE ACCESS</span></button>
+        </form>
+        <p id="login-error" class="text-ember text-[10px] uppercase font-mono mt-4 text-center hidden"></p>
+      </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div id="dashboard-section" class="hidden">
+      <div class="flex justify-between items-end mb-12 reveal">
+        <div>
+          <span class="scene-label">Terminal Hub</span>
+          <h1 class="page-title text-glow"><span class="glitch-text">Transmissions.</span></h1>
+        </div>
+        <button id="logout-btn" class="text-[10px] font-mono uppercase text-steel hover:text-ember transition-colors pb-2">[ Logout ]</button>
+      </div>
+
+      <div class="page-divider mb-12"></div>
+
+      <div id="messages-container" class="space-y-6">
+        <!-- Messages will be loaded here -->
+        <div class="loading-state text-center py-20 font-mono text-steel uppercase">[ Synchronizing Signals... ]</div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const loginSection = document.getElementById('login-section');
+    const dashboardSection = document.getElementById('dashboard-section');
+    const loginForm = document.getElementById('login-form');
+    const loginError = document.getElementById('login-error');
+    const messagesContainer = document.getElementById('messages-container');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    // Check if already logged in by trying to fetch messages
+    async function checkAuth() {
+      const res = await fetch('/api/admin/messages');
+      if (res.ok) {
+        showDashboard();
+      }
+    }
+
+    function showDashboard() {
+      loginSection.classList.add('hidden');
+      dashboardSection.classList.remove('hidden');
+      loadMessages();
+    }
+
+    async function loadMessages() {
+      try {
+        const res = await fetch('/api/admin/messages');
+        const messages = await res.json();
+
+        if (messages.length === 0) {
+          messagesContainer.innerHTML = '<div class="text-center py-20 font-mono text-steel uppercase">[ No signals found in this node ]</div>';
+          return;
+        }
+
+        messagesContainer.innerHTML = messages.map(msg => `
+          <div class="glass-panel p-6 message-card reveal">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h3 class="font-display text-xl text-paper">${msg.name}</h3>
+                <p class="text-ember font-mono text-[10px] uppercase tracking-widest">${msg.email}</p>
+              </div>
+              <span class="text-[10px] font-mono text-steel uppercase">${new Date(msg.createdAt).toLocaleString()}</span>
+            </div>
+            <p class="text-sm text-steel leading-relaxed">${msg.message}</p>
+          </div>
+        `).join('');
+      } catch (err) {
+        messagesContainer.innerHTML = '<div class="text-ember text-center py-20 font-mono uppercase">[ Error fetching signals ]</div>';
+      }
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = loginForm.username.value;
+      const password = loginForm.password.value;
+
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showDashboard();
+      } else {
+        loginError.innerText = 'ACCESS_DENIED: ' + (data.error || 'Invalid credentials');
+        loginError.classList.remove('hidden');
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      document.cookie = "admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      location.reload();
+    });
+
+    checkAuth();
+  </script>
+  <script src="global.js"></script>
+</body>
+</html>

@@ -4,6 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* -------------------------------------------------------------------------- */
   /* 1. SEAMLESS PAGE TRANSITIONS */
@@ -16,41 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
   }
 
-  // Intercept all internal links
-  document.querySelectorAll('a').forEach(anchor => {
-    anchor.addEventListener('click', (e) => {
-      const href = anchor.getAttribute('href');
-      
-      // Only intercept internal html links
-      if (!href || href.startsWith('http') || href.startsWith('mailto') || href.startsWith('#')) return;
-      if (anchor.target === '_blank') return;
-      
-      // Don't intercept if it's the exact same page
-      if (href === window.location.pathname.split('/').pop()) return;
-      
-      e.preventDefault();
-      
-      if (shutter) {
-        // Trigger fade-in to black
-        shutter.classList.remove('hidden');
-        shutter.classList.add('active');
-        
-        // Wait for animation then navigate
-        setTimeout(() => {
-          window.location.href = href;
-        }, 800);
-      } else {
-        window.location.href = href;
-      }
-    });
-  });
+
 
   /* -------------------------------------------------------------------------- */
   /* 2. MAGNETIC INTERACTIONS */
   /* -------------------------------------------------------------------------- */
   const magneticElements = document.querySelectorAll('.nav-links a, .mag-btn, .project-card, .t-btn, .play-btn, .arch-btn, .mag-btn-dark');
   
-  magneticElements.forEach(el => {
+  if (!prefersReducedMotion) magneticElements.forEach(el => {
     // Add a transition to smooth out the return to origin
     el.style.transition = 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)';
     
@@ -80,11 +54,17 @@ document.addEventListener('DOMContentLoaded', () => {
   let audioCtx;
   let ambientOsc1, ambientOsc2, ambientGain, lfo;
   // Use session storage to persist sound state across page loads
-  let isSoundOn = sessionStorage.getItem('abd_sound_on') === 'true';
+  let isSoundOn = false;
+  try {
+    isSoundOn = sessionStorage.getItem('abd_sound_on') === 'true';
+  } catch {
+    isSoundOn = false;
+  }
 
   function initAudio() {
-    if (audioCtx) return;
+    if (audioCtx) return true;
     const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return false;
     audioCtx = new AudioContext();
     
     // Ambient Drone (Deep cinematic hum)
@@ -93,16 +73,17 @@ document.addEventListener('DOMContentLoaded', () => {
     ambientGain = audioCtx.createGain();
     
     ambientOsc1.type = 'sine';
-    ambientOsc1.frequency.value = 55; // Deep bass A1
+    ambientOsc1.frequency.value = 432; // Harmonic resonance
+    ambientOsc1.frequency.value = 432; // Solfeggio frequency (A4=432Hz)
     ambientOsc2.type = 'triangle';
-    ambientOsc2.frequency.value = 55.5; // Slight detune
+    ambientOsc2.frequency.value = 434; // Slight detune for phasing
     
     // LFO for slow volume swelling
     lfo = audioCtx.createOscillator();
     lfo.type = 'sine';
-    lfo.frequency.value = 0.05; // 20s cycle
+    lfo.frequency.value = 0.1; // 10s cycle
     const lfoGain = audioCtx.createGain();
-    lfoGain.gain.value = 0.15;
+    lfoGain.gain.value = 0.05;
     
     lfo.connect(lfoGain);
     lfoGain.connect(ambientGain.gain);
@@ -116,16 +97,22 @@ document.addEventListener('DOMContentLoaded', () => {
     ambientOsc1.start();
     ambientOsc2.start();
     lfo.start();
+    return true;
   }
 
   function toggleSound(e) {
     if (e) e.preventDefault();
-    if (!audioCtx) initAudio();
+    if (!audioCtx && !initAudio()) {
+      if (soundToggle) soundToggle.innerHTML = '[ Sound: Unavailable ]';
+      return;
+    }
     
     if (audioCtx.state === 'suspended') audioCtx.resume();
 
     isSoundOn = !isSoundOn;
-    sessionStorage.setItem('abd_sound_on', isSoundOn);
+    try {
+      sessionStorage.setItem('abd_sound_on', isSoundOn);
+    } catch {}
     
     if (soundToggle) soundToggle.innerHTML = isSoundOn ? '[ Sound: On ]' : '[ Sound: Off ]';
     
@@ -139,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Audio context requires user interaction to resume in most browsers, 
     // so we can only init and resume if the user interacts with the document.
     const resumeOnInteraction = () => {
-      initAudio();
+      if (!initAudio()) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
       document.removeEventListener('click', resumeOnInteraction);
     };
@@ -199,26 +186,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('a, button, .hi-letter').forEach(el => {
       el.addEventListener('mouseenter', () => {
-        curRing.style.width = '56px';
-        curRing.style.height = '56px';
-        curRing.style.borderColor = 'var(--ember)';
+          curRing.style.width = '64px';
+        curRing.style.height = '64px';
+        curRing.style.background = 'rgba(255, 255, 255, 0.1)';
+        curRing.style.backdropFilter = 'blur(4px)';
+        curRing.style.mixBlendMode = 'difference';
+        curRing.style.border = 'none';
         curRing.style.opacity = '1';
-        curDot.style.background = 'var(--glass)';
+        curDot.style.opacity = '0';
       });
       el.addEventListener('mouseleave', () => {
         curRing.style.width = '36px';
         curRing.style.height = '36px';
-        curRing.style.borderColor = 'rgba(255,107,61,0.5)';
+        curRing.style.background = 'transparent';
+        curRing.style.mixBlendMode = 'normal';
+        curRing.style.border = '1px solid rgba(255,107,61,0.5)';
         curRing.style.opacity = '0.7';
+        curDot.style.opacity = '1';
         curDot.style.background = 'var(--ember)';
       });
       el.addEventListener('mousedown', () => {
         curRing.style.transform = 'translate(-50%, -50%) scale(0.8)';
-        curDot.style.transform = 'translate(-50%, -50%) scale(1.5)';
       });
       el.addEventListener('mouseup', () => {
         curRing.style.transform = 'translate(-50%, -50%) scale(1)';
-        curDot.style.transform = 'translate(-50%, -50%) scale(1)';
       });
     });
 
@@ -390,20 +381,23 @@ document.addEventListener('DOMContentLoaded', () => {
   /* -------------------------------------------------------------------------- */
   const mobileToggle = document.querySelector('.nav-mobile');
   if (mobileToggle) {
+    mobileToggle.setAttribute('role', 'button');
+    mobileToggle.setAttribute('aria-expanded', 'false');
+    mobileToggle.setAttribute('aria-controls', 'mobile-menu');
+
     const overlay = document.createElement('div');
     overlay.className = 'mobile-menu-overlay';
+    overlay.id = 'mobile-menu';
+    overlay.setAttribute('aria-hidden', 'true');
     overlay.innerHTML = `
       <div class="mobile-menu-inner">
-        <button class="mobile-close">[ Close ]</button>
+        <button class="mobile-close" type="button">[ Close ]</button>
         <ul class="mobile-nav-links">
           <li><a href="index.html">Home</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="work.html">Work</a></li>
-          <li><a href="lab.html">Lab 01</a></li>
-          <li><a href="lab2.html">Lab 02</a></li>
-          <li><a href="lab3.html">Lab 03</a></li>
-          <li><a href="lab4.html">Lab 04</a></li>
-          <li><a href="lab5.html">Lab 05</a></li>
+          <li><a href="lab.html">The Lab</a></li>
+          <li><a href="social.html">Social Hub</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
       </div>
@@ -442,14 +436,29 @@ document.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(style);
 
     const closeBtn = overlay.querySelector('.mobile-close');
+    const openMenu = () => {
+      overlay.classList.add('active');
+      overlay.setAttribute('aria-hidden', 'false');
+      mobileToggle.setAttribute('aria-expanded', 'true');
+      closeBtn.focus();
+    };
+    const closeMenu = () => {
+      overlay.classList.remove('active');
+      overlay.setAttribute('aria-hidden', 'true');
+      mobileToggle.setAttribute('aria-expanded', 'false');
+    };
 
     mobileToggle.addEventListener('click', (e) => {
       e.preventDefault();
-      overlay.classList.add('active');
+      openMenu();
     });
 
-    closeBtn.addEventListener('click', () => {
-      overlay.classList.remove('active');
+    closeBtn.addEventListener('click', closeMenu);
+    overlay.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', closeMenu);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMenu();
     });
   }
 
@@ -505,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* -------------------------------------------------------------------------- */
   /* 12. CYBERPUNK TEXT DECODING */
   /* -------------------------------------------------------------------------- */
-  const chars = '!<>-_\\\\/[]{}—=+*^?#_';
+  const chars = '!<>-_\\\\/[]{}-=+*^?#_';
   
   function decodeText(element) {
     if(element.dataset.decoded === 'true') return;
@@ -543,3 +552,4 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.glitch-text').forEach(el => decodeObs.observe(el));
 
 });
+

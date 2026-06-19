@@ -6,129 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <style>
-    /* ══ THEME TOKENS ══ */
-    :root {
-      --obsidian: #050608;
-      --ember: #ff6b3d;
-      --glass: #6fe3d9;
-      --steel: #8a93a6;
-      --paper: #f3f1ec;
-      --line: #1a1e28;
-      --panel-bg: rgba(10, 12, 16, 0.85);
-      --panel-border: rgba(111, 227, 217, 0.2);
-    }
-    
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: var(--obsidian); color: var(--paper);
-      font-family: 'Inter', sans-serif;
-      overflow: hidden; /* No scrolling in the playground */
-      background-color: #000;
-    }
-
-    /* ── Navbar ── */
-    nav {
-      position: absolute; top: 0; left: 0; right: 0; z-index: 1000;
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 1.5rem 2.5rem; mix-blend-mode: difference;
-    }
-    .nav-logo {
-      display: flex; align-items: center; gap: 0.6rem;
-      text-decoration: none; position: relative;
-    }
-    .logo-mark { transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
-    .nav-logo:hover .logo-mark { transform: scale(1.1); }
-    .logo-abd { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 1.1rem; letter-spacing: 0.1em; color: var(--paper); }
-    .logo-dev { font-family: 'Inter', sans-serif; font-weight: 300; font-size: 1.1rem; letter-spacing: 0.1em; color: var(--paper); margin-left: -0.2rem; }
-    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
-    .nav-links a {
-      font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase;
-      letter-spacing: 0.2em; color: var(--paper); text-decoration: none; transition: color 0.3s;
-    }
-    .nav-links a:hover { color: var(--ember); }
-
-    /* ══ GLOBAL CANVAS ══ */
-    #webgl-canvas {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      z-index: 0; pointer-events: none;
-    }
-
-    /* ══ CONTROL PANEL ══ */
-    .control-panel {
-      position: absolute; right: 2rem; top: 50%; transform: translateY(-50%);
-      width: 320px; background: var(--panel-bg); backdrop-filter: blur(12px);
-      border: 1px solid var(--panel-border); border-radius: 8px;
-      padding: 1.5rem; z-index: 100;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-      max-height: 80vh; overflow-y: auto;
-    }
-    
-    .panel-header {
-      font-family: 'Space Mono', monospace; font-size: 0.8rem;
-      color: var(--glass); letter-spacing: 0.2em; text-transform: uppercase;
-      margin-bottom: 1.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.5rem;
-    }
-
-    /* Tabs */
-    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
-    .tab-btn {
-      flex: 1; background: transparent; border: 1px solid var(--line);
-      color: var(--steel); padding: 0.5rem 0; font-family: 'Space Mono', monospace;
-      font-size: 0.6rem; cursor: pointer; transition: all 0.3s;
-      text-transform: uppercase; letter-spacing: 0.1em;
-    }
-    .tab-btn.active, .tab-btn:hover {
-      background: rgba(255,255,255,0.05); color: var(--paper); border-color: var(--glass);
-    }
-
-    /* Controls */
-    .control-group { margin-bottom: 1.2rem; display: none; }
-    .control-group.active { display: block; }
-    .control-label {
-      display: flex; justify-content: space-between;
-      font-family: 'Space Mono', monospace; font-size: 0.65rem;
-      color: var(--steel); margin-bottom: 0.5rem; letter-spacing: 0.1em;
-    }
-    .control-val { color: var(--paper); }
-    
-    /* Range Slider */
-    input[type=range] {
-      -webkit-appearance: none; width: 100%; background: transparent;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%;
-      background: var(--ember); cursor: pointer; margin-top: -5px;
-      box-shadow: 0 0 10px var(--ember);
-    }
-    input[type=range]::-webkit-slider-runnable-track {
-      width: 100%; height: 2px; cursor: pointer; background: var(--line);
-    }
-
-    /* Buttons */
-    .action-btn {
-      width: 100%; background: transparent; border: 1px solid var(--ember);
-      color: var(--ember); padding: 0.8rem; font-family: 'Space Mono', monospace;
-      font-size: 0.7rem; letter-spacing: 0.2em; cursor: pointer;
-      text-transform: uppercase; transition: all 0.3s; margin-top: 1rem;
-    }
-    .action-btn:hover {
-      background: var(--ember); color: #000;
-    }
-
-    /* ══ MOBILE RESPONSIVENESS ══ */
-    @media (max-width: 768px) {
-      .nav-links { display: none; }
-      .control-panel {
-        right: 5%; left: 5%; bottom: 2rem; top: auto; transform: none; width: 90%;
-        max-height: 40vh; padding: 1rem;
-      }
-    }
-  </style>
-  <link rel="stylesheet" href="mobile.css" />
+  <link rel="stylesheet" href="global.css" />
+  
 </head>
-<body>
+<body class="playground">
 
   <!-- Navbar -->
   <nav id="navbar">
@@ -140,15 +28,14 @@
       <span class="logo-abd">ABD</span>
       <span class="logo-dev">DEVELOPER</span>
     </a>
-    <ul class="nav-links">
-      <li><a href="index.html">[ Home ]</a></li>
-      <li><a href="lab.html">[ Lab 01 ]</a></li>
-      <li><a href="lab2.html" style="color:var(--glass);">[ Lab 02 ]</a></li>
-      <li><a href="lab3.html">[ Lab 03: Engine ]</a></li>
-      <li><a href="lab4.html">[ Lab 04: Cosmic ]</a></li>
-      <li><a href="lab5.html">[ Lab 05: Audio ]</a></li>
-      <li><button id="sound-toggle" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;">[ Sound: Off ]</button></li>
-    </ul>
+          <ul class="nav-links">
+        <li><a href="index.html">[ Home ]</a></li>
+        <li><a href="about.html">[ About ]</a></li>
+        <li><a href="work.html">[ Work ]</a></li>
+        <li><a href="lab.html">[ Lab ]</a></li>
+        <li><a href="social.html">[ Social ]</a></li>
+        <li><a href="contact.html">[ Contact ]</a></li>
+      </ul>
     <a href="#" class="nav-mobile">[ Menu ]</a>
   </nav>
 
@@ -326,6 +213,19 @@
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ReinhardToneMapping;
+    renderer.toneMappingExposure = 1.0;
+
+    // Post-Processing
+    const renderScene = new THREE.RenderPass(scene, camera);
+    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+    bloomPass.threshold = 0.05;
+    bloomPass.strength = 1.2;
+    bloomPass.radius = 0.6;
+
+    const composer = new THREE.EffectComposer(renderer);
+    composer.addPass(renderScene);
+    composer.addPass(bloomPass);
 
     // OrbitControls
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -405,8 +305,14 @@
       new THREE.TetrahedronGeometry(4, 0)
     ];
     let currentCoreGeo = 0;
-    const cMat = new THREE.MeshStandardMaterial({ 
-      color: 0xffffff, metalness: 0.9, roughness: 0.1, flatShading: true, emissive: 0x6fe3d9, emissiveIntensity: 1.0
+    const cMat = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      metalness: 1.0,
+      roughness: 0.05,
+      emissive: 0x6fe3d9,
+      emissiveIntensity: 0.4,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.1
     });
     const coreMesh = new THREE.Mesh(coreGeos[0], cMat);
     
@@ -562,7 +468,7 @@
       }
 
       controls.update();
-      renderer.render(scene, camera);
+      composer.render();
     }
 
     let mouseX = 0; let mouseY = 0;
@@ -582,5 +488,34 @@
   </script>
   <script src="global.js"></script>
   <div class="page-transition-shutter"></div>
+
+  <!-- Lab Navigation -->
+  <div class="lab-nav" style="position: fixed; bottom: 2.5rem; left: 50%; transform: translateX(-50%); z-index: 10000; font-family: 'Space Mono', monospace; font-size: 0.7rem; display: flex; gap: 1.5rem; border: 1px solid var(--line); padding: 0.75rem 1.5rem; background: rgba(11,13,18,0.85); backdrop-filter: blur(12px); border-radius: 2px; white-space: nowrap;">
+    <a href="lab.html" class="lab-link" data-lab="lab.html" style="color: var(--steel); text-decoration: none; transition: color 0.3s; text-transform: uppercase;">[01] The Lab</a>
+    <a href="lab2.html" class="lab-link" data-lab="lab2.html" style="color: var(--steel); text-decoration: none; transition: color 0.3s; text-transform: uppercase;">[02] Playground</a>
+    <a href="lab3.html" class="lab-link" data-lab="lab3.html" style="color: var(--steel); text-decoration: none; transition: color 0.3s; text-transform: uppercase;">[03] Game Engine</a>
+    <a href="lab4.html" class="lab-link" data-lab="lab4.html" style="color: var(--steel); text-decoration: none; transition: color 0.3s; text-transform: uppercase;">[04] Cosmic Scale</a>
+    <a href="lab5.html" class="lab-link" data-lab="lab5.html" style="color: var(--steel); text-decoration: none; transition: color 0.3s; text-transform: uppercase;">[05] Audio Vis</a>
+  </div>
+  <style>
+    .lab-link:hover { color: var(--paper) !important; text-shadow: 0 0 10px rgba(243, 241, 236, 0.5); }
+    .lab-link.active { color: var(--ember) !important; text-shadow: 0 0 10px rgba(255, 107, 61, 0.5); }
+    @media (max-width: 768px) {
+      .lab-nav { width: 90%; flex-wrap: wrap; justify-content: center; gap: 0.5rem; padding: 0.75rem; bottom: 1rem; }
+      .lab-link { font-size: 0.6rem; }
+    }
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentPath = window.location.pathname.split('/').pop() || 'lab.html';
+      const links = document.querySelectorAll('.lab-link');
+      links.forEach(link => {
+        if(link.getAttribute('data-lab') === currentPath) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+
 </body>
 </html>

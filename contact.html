@@ -17,113 +17,46 @@
       }}
     }
   </script>
+  <link rel="stylesheet" href="global.css" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --obsidian:#0B0D12; --panel:#11141B; --paper:#F3F1EC; --ember:#FF6B3D; --glass:#6FE3D9; --steel:#8A93A6; --line:#262B36; }
-    html { scroll-behavior: smooth; }
-    ::selection { background: var(--ember); color: var(--obsidian); }
-    * { scrollbar-width: thin; scrollbar-color: var(--line) var(--obsidian); }
-    body { background: var(--obsidian); color: var(--paper); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
-    .grain { position: fixed; inset: 0; z-index: 50; pointer-events: none; opacity: 0.05; mix-blend-mode: overlay;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); background-size: 160px; }
-    .scanlines { position: fixed; inset: 0; z-index: 48; pointer-events: none; opacity: 0.035;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.8) 2px, rgba(0,0,0,0.8) 3px); }
-    #scroll-prog { position: fixed; top: 0; left: 0; z-index: 9000; height: 2px; width: 0%; background: linear-gradient(90deg, var(--ember), var(--glass)); pointer-events: none; }
-    #navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 40; border-bottom: 1px solid transparent; transition: background 0.5s, border-color 0.5s; }
-    #navbar.scrolled { background: rgba(11,13,18,0.8); backdrop-filter: blur(12px); border-color: var(--line); }
-    .nav-inner { max-width: 72rem; margin: 0 auto; padding: 1rem 2.5rem; display: flex; align-items: center; justify-content: space-between; }
-    .nav-logo {
-      display: flex; align-items: center; gap: 0.6rem;
-      text-decoration: none; position: relative;
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-top: 1rem;
     }
-    .logo-mark {
-      transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);
+    .form-group { position: relative; }
+    .form-group input, .form-group textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--line);
+      padding: 1rem;
+      color: var(--paper);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      outline: none;
+      transition: all 0.3s;
     }
-    .nav-logo:hover .logo-mark {
-      transform: scale(1.1);
+    .form-group input:focus, .form-group textarea:focus {
+      border-color: var(--ember);
+      background: rgba(255, 107, 61, 0.05);
     }
-    .logo-abd {
-      font-family: 'Inter', sans-serif; font-weight: 600; font-size: 1.1rem;
-      letter-spacing: 0.1em; color: var(--paper); transition: color 0.4s;
+    .form-status {
+      margin-top: 1.5rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-align: center;
+      min-height: 1rem;
     }
-    .logo-dev {
-      font-family: 'Inter', sans-serif; font-weight: 300; font-size: 1.1rem;
-      letter-spacing: 0.1em; color: var(--paper); margin-left: -0.2rem; transition: color 0.4s;
+    .form-status.success { color: #90f058; }
+    .form-status.error { color: var(--ember); }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;
     }
-    .logo-accent {
-      position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px;
-      background: linear-gradient(90deg, #90f058, transparent);
-      transform: scaleX(0); transform-origin: left; transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);
-    }
-    .nav-logo:hover .logo-accent { transform: scaleX(1); }
-    .nav-logo:hover .logo-abd, .nav-logo:hover .logo-dev { color: #90f058; }
-    .nav-links { display: flex; gap: 2rem; list-style: none; }
-    .nav-links a { font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--steel); text-decoration: none; transition: color 0.3s; }
-    .nav-links a:hover, .nav-links a.active { color: var(--ember); }
-    .nav-mobile { font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--paper); text-decoration: none; display: none; transition: color 0.3s; }
-    .nav-mobile:hover { color: var(--ember); }
-    @media (max-width: 640px) { 
-      .nav-links { display: none; } 
-      .nav-mobile { display: block; }
-      .nav-inner { padding: 1rem 1.5rem; } 
-      .logo-mark { width: 24px; height: 24px; }
-      .logo-abd { font-size: 1rem; }
-      .logo-dev { font-size: 0.5rem; }
-    }
-
-    .scene-label { font-family: 'Space Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.35em; color: var(--glass); margin-bottom: 1rem; display: block; }
-    .page-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(3.5rem, 10vw, 8rem); letter-spacing: -0.04em; line-height: 0.95; overflow: hidden; }
-    .page-title span { display: inline-block; animation: slideUp 0.9s cubic-bezier(0.22,1,0.36,1) 0.2s both; }
-    @keyframes slideUp { from { transform: translateY(110%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .page-divider { height: 1px; background: var(--line); margin: 3rem 0; animation: growLine 1s ease 0.5s both; transform-origin: left; }
-    @keyframes growLine { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-
-    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1); }
-    .reveal.visible { opacity: 1; transform: none; }
-    .reveal-d1 { transition-delay: 0.1s; } .reveal-d2 { transition-delay: 0.2s; } .reveal-d3 { transition-delay: 0.3s; }
-
-    /* contact big box */
-    .contact-wrap { max-width: 72rem; margin: 0 auto; padding: 9rem 2.5rem 2rem; }
-    .contact-main { background: var(--paper); color: var(--obsidian); padding: 5rem 4rem; }
-    @media (max-width: 640px) { .contact-main { padding: 3rem 1.5rem; } }
-    .contact-heading { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(2rem,5vw,3.5rem); line-height: 1.15; letter-spacing: -0.02em; max-width: 28rem; margin-bottom: 1.5rem; }
-    .contact-sub { font-size: 0.9375rem; line-height: 1.75; color: rgba(11,13,18,0.65); max-width: 26rem; margin-bottom: 2.5rem; }
-
-    /* mag btn dark */
-    .mag-btn-dark { display: inline-flex; align-items: center; gap: 0.5rem; border: 1px solid var(--obsidian); background: transparent; padding: 0.75rem 1.5rem; font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--obsidian); text-decoration: none; position: relative; overflow: hidden; }
-    .mag-btn-dark::before { content:''; position:absolute; inset:0; background:var(--obsidian); transform:scaleX(0); transform-origin:left; transition:transform 0.4s cubic-bezier(0.22,1,0.36,1); }
-    .mag-btn-dark:hover::before { transform: scaleX(1); }
-    .mag-btn-dark:hover { color: var(--paper); }
-    .mag-btn-dark span { position: relative; z-index: 1; }
-
-    /* socials */
-    .socials { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 2rem; }
-    .social-btn { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border: 1px solid var(--line); font-family: 'Space Mono', monospace; font-size: 0.6rem; text-transform: uppercase; color: var(--steel); text-decoration: none; transition: border-color 0.3s, color 0.3s; }
-    .social-btn:hover { border-color: var(--ember); color: var(--ember); }
-
-    /* testimonials */
-    .testimonial-wrap { position: relative; min-height: 14rem; overflow: hidden; }
-    .testimonial-slide { position: absolute; inset: 0; opacity: 0; transform: translateX(60px); transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22,1,0.36,1); pointer-events: none; }
-    .testimonial-slide.active { opacity: 1; transform: none; pointer-events: auto; }
-    .testimonial-slide.exit { opacity: 0; transform: translateX(-60px); }
-    .testimonial-quote { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(1.2rem,2.5vw,1.875rem); line-height: 1.65; color: var(--paper); }
-    .testimonial-author { display: flex; align-items: center; gap: 1rem; margin-top: 2rem; }
-    .t-line { width: 3rem; height: 1px; background: var(--ember); flex-shrink: 0; }
-    .t-name { font-size: 0.875rem; font-weight: 500; color: var(--paper); }
-    .t-role { font-family: 'Space Mono', monospace; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--steel); }
-    .t-controls { display: flex; align-items: center; gap: 1rem; margin-top: 2.5rem; }
-    .t-btn { width: 2.5rem; height: 2.5rem; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: var(--steel); cursor: pointer; background: transparent; font-size: 1rem; transition: border-color 0.3s, color 0.3s; }
-    .t-btn:hover { border-color: var(--ember); color: var(--ember); }
-    .t-dots { display: flex; gap: 0.5rem; }
-    .t-dot { width: 2rem; height: 1px; background: var(--line); cursor: pointer; border: none; padding: 0; transition: background 0.3s; }
-    .t-dot.active { background: var(--ember); }
-
-    footer { border-top: 1px solid var(--line); margin-top: 6rem; }
-    .footer-inner { max-width: 72rem; margin: 0 auto; padding: 1.5rem 2.5rem; display: flex; align-items: center; justify-content: space-between; font-family: 'Space Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--steel); }
-    .footer-top { color: var(--paper); text-decoration: none; }
-    .footer-top:hover { color: var(--ember); }
   </style>
-  <link rel="stylesheet" href="mobile.css" />
 </head>
 <body>
   <div class="grain"></div>
@@ -133,7 +66,7 @@
   <div id="cursor-ring" style="position:fixed;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);width:36px;height:36px;border:1.5px solid rgba(255,107,61,0.5);will-change:left,top;transition:width 0.35s,height 0.35s,border-color 0.35s;opacity:0.7;"></div>
 
   <header id="navbar">
-    <nav class="nav-inner">
+    <nav class="nav-inner glass-panel">
       <a href="index.html" class="nav-logo">
         <svg class="logo-mark" viewBox="0 0 100 100" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
           <polygon points="50,15 90,90 70,90 50,55 30,90 10,90" fill="none" stroke="#90f058" stroke-width="4" stroke-linejoin="miter" />
@@ -143,15 +76,13 @@
         <span class="logo-dev">DEVELOPER</span>
         <div class="logo-accent"></div>
       </a>
-      <ul class="nav-links">
+            <ul class="nav-links">
         <li><a href="index.html">[ Home ]</a></li>
         <li><a href="about.html">[ About ]</a></li>
         <li><a href="work.html">[ Work ]</a></li>
-        <li><a href="lab.html">[ Lab 01 ]</a></li>
-        <li><a href="lab2.html">[ Lab 02 ]</a></li>
-        <li><a href="lab3.html">[ Lab 03: Engine ]</a></li>
-        <li><a href="contact.html" class="active">[ Contact ]</a></li>
-        <li><button id="sound-toggle">[ Sound: Off ]</button></li>
+        <li><a href="lab.html">[ Lab ]</a></li>
+        <li><a href="social.html">[ Social ]</a></li>
+        <li><a href="contact.html">[ Contact ]</a></li>
       </ul>
       <a href="#" class="nav-mobile">[ Menu ]</a>
     </nav>
@@ -160,14 +91,76 @@
   <!-- Contact -->
   <div class="contact-wrap">
     <span class="scene-label reveal">Cut To — Contact</span>
-    <h1 class="page-title reveal"><span class="glitch-text">Let's shoot.</span></h1>
+    <h1 class="page-title reveal text-glow"><span class="glitch-text">Let's shoot.</span></h1>
     <div class="page-divider"></div>
-    <div class="contact-main reveal">
-      <p style="font-family:'Space Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.3em;color:rgba(11,13,18,0.5);margin-bottom:1rem;">Get in touch</p>
-      <h2 class="contact-heading">Let's make something worth watching.</h2>
-      <p class="contact-sub">Open to freelance projects, collaborations, and full-time roles where motion and engineering meet.</p>
-      <a href="mailto:hello@abddeveloper.dev" class="mag-btn-dark"><span>hello@abddeveloper.dev →</span></a>
+    <div class="contact-main glass-panel reveal">
+      <p style="font-family:'Space Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.3em;color:rgba(11,13,18,0.5);margin-bottom:1rem;">Transmission Input</p>
+
+      <form id="contact-form" class="contact-form">
+        <div class="form-group">
+          <label for="name" class="sr-only">Name</label>
+          <input type="text" id="name" name="name" placeholder="[ NAME / IDENTIFIER ]" required>
+        </div>
+        <div class="form-group">
+          <label for="email" class="sr-only">Email</label>
+          <input type="email" id="email" name="email" placeholder="[ EMAIL@ADDRESS.COM ]" required>
+        </div>
+        <div class="form-group">
+          <label for="message" class="sr-only">Message</label>
+          <textarea id="message" name="message" rows="4" placeholder="[ YOUR MESSAGE / MISSION BRIEF ]" required></textarea>
+        </div>
+
+        <button type="submit" class="mag-btn-dark" style="width: 100%; justify-content: center;">
+          <span id="submit-text">INITIATE TRANSMISSION →</span>
+        </button>
+      </form>
+
+      <div id="form-status" class="form-status"></div>
     </div>
+
+    <script>
+      document.getElementById('contact-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const status = document.getElementById('form-status');
+        const submitBtn = form.querySelector('button');
+        const submitText = document.getElementById('submit-text');
+
+        const data = {
+          name: form.name.value,
+          email: form.email.value,
+          message: form.message.value
+        };
+
+        try {
+          submitBtn.disabled = true;
+          submitText.innerText = 'TRANSMITTING...';
+          status.innerText = '';
+
+          const response = await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            status.className = 'form-status success';
+            status.innerText = result.message;
+            form.reset();
+          } else {
+            throw new Error(result.message || 'Transmission failed');
+          }
+        } catch (err) {
+          status.className = 'form-status error';
+          status.innerText = 'ERROR: ' + err.message;
+        } finally {
+          submitBtn.disabled = false;
+          submitText.innerText = 'INITIATE TRANSMISSION →';
+        }
+      });
+    </script>
 
     <!-- Socials -->
     <div class="socials reveal reveal-d1">
